@@ -376,6 +376,9 @@ class GenMapperPoster {
     }
 }
 
+const PRINT_FALLBACK_DELAY_MS = 5000;
+const PRINT_CLEANUP_DELAY_MS = 2000;
+
 // Enhanced PrintDialog with better orientation support
 class PrintDialog {
     static init() {
@@ -439,22 +442,25 @@ class PrintDialog {
             iframe.style.opacity = '0';
             iframe.style.border = 'none';
 
-            document.body.appendChild(iframe);
-
-            const iframeDoc = iframe.contentDocument;
-            iframeDoc.open();
-            iframeDoc.write(content);
-            iframeDoc.close();
-
-            // Print with shorter delay
-            setTimeout(() => {
+            // Print once the page and its images (health icons) have loaded, with a fallback
+            let printed = false;
+            const printOnce = () => {
+                if (printed) {
+                    return;
+                }
+                printed = true;
                 iframe.contentWindow.print();
                 setTimeout(() => {
                     if (document.body.contains(iframe)) {
                         document.body.removeChild(iframe);
                     }
-                }, 2000);
-            }, 500);
+                }, PRINT_CLEANUP_DELAY_MS);
+            };
+            iframe.onload = printOnce;
+            setTimeout(printOnce, PRINT_FALLBACK_DELAY_MS);
+
+            iframe.srcdoc = content;
+            document.body.appendChild(iframe);
 
             return true;
         } catch (error) {
@@ -476,3 +482,4 @@ const genMapperPoster = new GenMapperPoster();
 
 // ATTEMPT 3 FIX: Expose GenMapperPoster globally for other scripts to access
 window.GenMapperPoster = genMapperPoster;
+window.GenMapperPrintDialog = PrintDialog;

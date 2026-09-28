@@ -83,6 +83,8 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
             'wp-i18n'
         ], filemtime( plugin_dir_path( __FILE__ ) . $this->js_file_name ), true);
 
+        $this->print_pack_scripts();
+
         // Localize script with array data
         wp_localize_script(
             'dt_' . $this->slug . '_script', $this->js_object_name, [
@@ -103,6 +105,54 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 ]
             ]
         );
+    }
+
+    /**
+     * Print pack (one-page overview + a page per first-generation tree) for the Groups chart
+     */
+    private function print_pack_scripts() {
+        $dir = trailingslashit( plugin_dir_url( __FILE__ ) ) . 'print-pack/';
+        $path = plugin_dir_path( __FILE__ ) . 'print-pack/';
+
+        wp_enqueue_style( 'genmapper-print-pack', $dir . 'print-pack.css', [], filemtime( $path . 'print-pack.css' ) );
+        wp_enqueue_script( 'genmapper-print-pack-common', $dir . 'print-pack-common.js', [ 'genmapper' ], filemtime( $path . 'print-pack-common.js' ), true );
+        wp_enqueue_script( 'genmapper-print-pack-overview', $dir . 'print-pack-overview.js', [ 'genmapper-print-pack-common' ], filemtime( $path . 'print-pack-overview.js' ), true );
+        wp_enqueue_script( 'genmapper-print-pack-tree-pages', $dir . 'print-pack-tree-pages.js', [ 'genmapper-print-pack-common', 'd3' ], filemtime( $path . 'print-pack-tree-pages.js' ), true );
+        wp_enqueue_script( 'genmapper-print-pack', $dir . 'print-pack.js', [ 'genmapper-print-pack-overview', 'genmapper-print-pack-tree-pages', 'genmapper-poster' ], filemtime( $path . 'print-pack.js' ), true );
+
+        wp_localize_script( 'genmapper-print-pack-common', 'genPrintPack', [
+            'translations' => [
+                'chart_label' => DT_Genmapper_Metrics::chart_label(),
+                'print_title' => __( 'Print', 'disciple-tools-genmapper' ),
+                'overview_title' => __( 'Overview', 'disciple-tools-genmapper' ),
+                'overview_subtitle' => __( 'All groups by generation. Each row shows the group name and its leader.', 'disciple-tools-genmapper' ),
+                'printed' => __( 'Printed', 'disciple-tools-genmapper' ),
+                'printed_date' => date_i18n( get_option( 'date_format' ) ),
+                'gen_prefix' => __( 'Gen', 'disciple-tools-genmapper' ),
+                'legend_church' => __( 'Church', 'disciple-tools-genmapper' ),
+                'legend_group' => __( 'Group', 'disciple-tools-genmapper' ),
+                'legend_inactive' => __( 'Inactive', 'disciple-tools-genmapper' ),
+                'legend_coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
+                'stat_groups' => __( 'groups', 'disciple-tools-genmapper' ),
+                'stat_churches' => __( 'churches', 'disciple-tools-genmapper' ),
+                'stat_active' => __( 'active', 'disciple-tools-genmapper' ),
+                'stat_coached' => __( 'coached', 'disciple-tools-genmapper' ),
+                'paper' => __( 'Paper', 'disciple-tools-genmapper' ),
+                'orientation' => __( 'Orientation', 'disciple-tools-genmapper' ),
+                'landscape' => __( 'Landscape', 'disciple-tools-genmapper' ),
+                'portrait' => __( 'Portrait', 'disciple-tools-genmapper' ),
+                'include_overview' => __( 'One-page overview of all groups', 'disciple-tools-genmapper' ),
+                'include_trees' => __( 'A detailed page for each first-generation tree', 'disciple-tools-genmapper' ),
+                'names_about' => __( 'Names print at about', 'disciple-tools-genmapper' ),
+                'small_text_trees' => __( 'Small text on:', 'disciple-tools-genmapper' ),
+                'small_text_hint' => __( 'try A3 or larger paper', 'disciple-tools-genmapper' ),
+                'print' => __( 'Print', 'disciple-tools-genmapper' ),
+                'cancel' => __( 'Cancel', 'disciple-tools-genmapper' ),
+                'classic_poster' => __( 'Classic large poster', 'disciple-tools-genmapper' ),
+                'nothing_to_print' => __( 'There are no groups on the chart to print.', 'disciple-tools-genmapper' ),
+                'print_failed' => __( 'The print window could not be opened. Please try again.', 'disciple-tools-genmapper' ),
+            ],
+        ] );
     }
 
     //${localizedObject.translation.string /**/}
@@ -191,6 +241,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 "coached" => !empty( $group['has_coach'] ),
                 /* translators: %d: generation number of the group, 1 = first generation */
                 "generation_label" => sprintf( __( 'Gen %d', 'disciple-tools-genmapper' ), $generations[ $group['id'] ] ?? 1 ),
+                "generation" => $generations[ $group['id'] ] ?? 1,
                 "location" => $location_display,
                 "start_date" => $group['start_date'] ? gmdate( get_option( 'date_format' ), strtotime( $group['start_date'] ) ) : null,
                 "attenders" => (int) $group['total_members'],

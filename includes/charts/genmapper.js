@@ -790,6 +790,10 @@ class GenMapper {
   // Talks to GenMapperPoster service to print the gen map
   // Connected to the print button in the UI left menu
   printMap (printType) {
+    if (window.GenMapperPrintPack) {
+      window.GenMapperPrintPack.open()
+      return
+    }
     if (typeof window.GenMapperPoster === 'undefined' || !window.GenMapperPoster) {
       console.error('GenMapperPoster service not available');
       this.displayAlert('Print service not loaded. Please refresh the page and try again.');
