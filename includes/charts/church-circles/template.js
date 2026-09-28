@@ -8,6 +8,9 @@ const healthIconSpacing = healthIconHeight / 2;
 const countLeft = boxHeight * -0.65;
 const countNumberLeft = boxHeight * -0.55;
 const countSpacing = boxHeight / 2.8;
+const NODE_WIDTH = boxHeight * 4;
+const NODE_HEIGHT = boxHeight * 3.25;
+const LINE_WIDTH = NODE_WIDTH - 20;
 
 const icons = window.genApiTemplate.icons;
 let group_fields = window.genApiTemplate.group_fields;
@@ -15,6 +18,7 @@ let group_types = group_fields.group_type.default;
 let health_fields = group_fields.health_metrics.default;
 const showMetrics = window.genApiTemplate.show_metrics === "1";
 const showIcons = window.genApiTemplate.show_icons === "1";
+const showGeneration = window.genApiTemplate.show_generation === "1";
 
 const metricIcons = {};
 const metricNumbers = [];
@@ -95,8 +99,8 @@ const template = {
   name: "Church circles 0.6",
   settings: {
     nodeSize: {
-      width: boxHeight * 2.5,
-      height: boxHeight * 2.5,
+      width: NODE_WIDTH,
+      height: NODE_HEIGHT,
     },
   },
   svg: {
@@ -249,9 +253,9 @@ const template = {
       svg: {
         type: "foreignObject",
         attributes: {
-          x: -((boxHeight * 6) / 2),
+          x: -(LINE_WIDTH / 2),
           y: boxHeight,
-          width: boxHeight * 6,
+          width: LINE_WIDTH,
           height: 20,
         },
         style: {
@@ -265,9 +269,9 @@ const template = {
       svg: {
         type: "foreignObject",
         attributes: {
-          x: -((boxHeight * 6) / 2),
+          x: -(LINE_WIDTH / 2),
           y: boxHeight + lineHeight,
-          width: boxHeight * 6,
+          width: LINE_WIDTH,
           height: 20,
         },
         style: {
@@ -280,9 +284,9 @@ const template = {
       svg: {
         type: "foreignObject",
         attributes: {
-          x: -((boxHeight * 6) / 2),
+          x: -(LINE_WIDTH / 2),
           y: boxHeight + lineHeight * 2,
-          width: boxHeight * 6,
+          width: LINE_WIDTH,
           height: 20,
         },
         style: {
@@ -295,9 +299,9 @@ const template = {
       svg: {
         type: "foreignObject",
         attributes: {
-          x: -((boxHeight * 6) / 2),
+          x: -(LINE_WIDTH / 2),
           y: boxHeight + lineHeight * 3,
-          width: boxHeight * 6,
+          width: LINE_WIDTH,
           height: 20,
         },
         style: {
@@ -305,6 +309,22 @@ const template = {
         },
       },
     },
+    ...(showGeneration ? [{
+      header: "generation_label",
+      svg: {
+        type: "text",
+        attributes: {
+          x: -boxHeight / 2 - 8,
+          y: boxHeight / 2 + 5,
+        },
+        style: {
+          "text-anchor": "end",
+          "font-size": "12px",
+          fill: "#777",
+          stroke: "none",
+        },
+      },
+    }] : []),
     ...metricNumbers,
     {
       header: "group_type",

@@ -67,7 +67,8 @@ class DT_Genmapper_Plugin_Queries
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metriccommunion1 WHERE metriccommunion1.post_id = a.ID AND metriccommunion1.meta_key = 'health_metrics' AND metriccommunion1.meta_value = 'church_communion')) as health_metrics_communion,
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metricgiving1 WHERE metricgiving1.post_id = a.ID AND metricgiving1.meta_key = 'health_metrics' AND metricgiving1.meta_value = 'church_giving')) as health_metrics_giving,
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metricprayer1 WHERE metricprayer1.post_id = a.ID AND metricprayer1.meta_key = 'health_metrics' AND metricprayer1.meta_value = 'church_prayer')) as health_metrics_prayer,
-                      (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metriccommitment1 WHERE metriccommitment1.post_id = a.ID AND metriccommitment1.meta_key = 'health_metrics' AND metriccommitment1.meta_value = 'church_commitment')) as health_metrics_commitment
+                      (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metriccommitment1 WHERE metriccommitment1.post_id = a.ID AND metriccommitment1.meta_key = 'health_metrics' AND metriccommitment1.meta_value = 'church_commitment')) as health_metrics_commitment,
+                      (SELECT EXISTS (SELECT 1 FROM $wpdb->p2p as coached1 WHERE coached1.p2p_from = a.ID AND coached1.p2p_type = 'groups_to_coaches')) as has_coach
                     FROM $wpdb->posts as a
                     LEFT JOIN $wpdb->postmeta as members1
                       ON members1.post_id=a.ID
@@ -143,7 +144,8 @@ class DT_Genmapper_Plugin_Queries
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetriccommunion1 WHERE gmetriccommunion1.post_id = p.p2p_from AND gmetriccommunion1.meta_key = 'health_metrics' AND gmetriccommunion1.meta_value = 'church_communion')) as health_metrics_communion,
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetricgiving1 WHERE gmetricgiving1.post_id = p.p2p_from AND gmetricgiving1.meta_key = 'health_metrics' AND gmetricgiving1.meta_value = 'church_giving')) as health_metrics_giving,
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetricprayer1 WHERE gmetricprayer1.post_id = p.p2p_from AND gmetricprayer1.meta_key = 'health_metrics' AND gmetricprayer1.meta_value = 'church_prayer')) as health_metrics_prayer,
-                      (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetriccommitment1 WHERE gmetriccommitment1.post_id = p.p2p_from AND gmetriccommitment1.meta_key = 'health_metrics' AND gmetriccommitment1.meta_value = 'church_commitment')) as health_metrics_commitment
+                      (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetriccommitment1 WHERE gmetriccommitment1.post_id = p.p2p_from AND gmetriccommitment1.meta_key = 'health_metrics' AND gmetriccommitment1.meta_value = 'church_commitment')) as health_metrics_commitment,
+                      (SELECT EXISTS (SELECT 1 FROM $wpdb->p2p as coached1 WHERE coached1.p2p_from = p.p2p_from AND coached1.p2p_type = 'groups_to_coaches')) as has_coach
                     FROM $wpdb->p2p as p
                     LEFT JOIN $wpdb->postmeta as gmembers1
                       ON gmembers1.post_id=p.p2p_from

@@ -8,6 +8,17 @@
     }
   })
 
+  // Legend for the coached-group fill; only shown when the setting is on
+  function coaching_legend() {
+    if (window.genApiTemplate.show_coaching !== "1") {
+      return ''
+    }
+    return `<div class="coaching-legend">
+      <span class="coaching-legend__swatch coaching-legend__swatch--coached"></span>${window.lodash.escape(localizedObject.translation.coached)}
+      <span class="coaching-legend__swatch"></span>${window.lodash.escape(localizedObject.translation.not_coached)}
+    </div>`
+  }
+
   function show_template_overview() {
 
     const windowHeight = document.documentElement.clientHeight
@@ -16,6 +27,7 @@
         <div class="cell medium-9">
             <span class="section-header">${localizedObject.translation.string1 /*Group Generation Tree*/}</span>
             ${localizedObject.translation.string2 /*This tree only show First Generation groups that have multiplied*/}
+            ${coaching_legend()}
         </div>
         <div class="cell medium-3">
             <div class="input-group">

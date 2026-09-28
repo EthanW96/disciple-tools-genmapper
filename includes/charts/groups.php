@@ -48,6 +48,8 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'group_fields' => $group_fields,
                 'show_metrics' => get_option( "dt_genmapper_show_health_metrics", false ),
                 'show_icons' => get_option( "dt_genmapper_show_health_icons", true ),
+                'show_coaching' => get_option( "dt_genmapper_show_coaching", false ),
+                'show_generation' => get_option( "dt_genmapper_show_generation", false ),
             ]
         );
 
@@ -70,6 +72,8 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
             'genmapper', 'genApiTemplate', [
                 'show_metrics' => get_option( "dt_genmapper_show_health_metrics", false ),
                 'show_icons' => get_option( "dt_genmapper_show_health_icons", true ),
+                'show_coaching' => get_option( "dt_genmapper_show_coaching", false ),
+                'show_generation' => get_option( "dt_genmapper_show_generation", false ),
             ]
         );
         wp_enqueue_script('dt_' . $this->slug . '_script', trailingslashit( plugin_dir_url( __FILE__ ) ) . $this->js_file_name, [
@@ -94,6 +98,8 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                     'string2' => __( 'This tree only shows First Generation groups that have multiplied.', 'disciple-tools-genmapper' ),
                     'string3' => __( 'See descendants of a specific group', 'disciple-tools-genmapper' ),
                     'string4' => __( 'Reset', 'disciple-tools-genmapper' ),
+                    'coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
+                    'not_coached' => __( 'No coach', 'disciple-tools-genmapper' ),
                 ]
             ]
         );
@@ -135,6 +141,9 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         if (is_wp_error( $groups )) {
             return $groups;
         }
+
+        // Generations come from the full tree so a rebased view keeps real numbers.
+        $generations = $this->get_generations( $groups );
 
         if ( !empty( $params["node"] && $params["node"] != "null" )) {
             $node = [];
@@ -179,6 +188,9 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 "group_type" => $group["group_type"],
                 "post_type" => "groups",
                 "coach" => $group["coach"],
+                "coached" => !empty( $group['has_coach'] ),
+                /* translators: %d: generation number of the group, 1 = first generation */
+                "generation_label" => sprintf( __( 'Gen %d', 'disciple-tools-genmapper' ), $generations[ $group['id'] ] ?? 1 ),
                 "location" => $location_display,
                 "start_date" => $group['start_date'] ? gmdate( get_option( 'date_format' ), strtotime( $group['start_date'] ) ) : null,
                 "attenders" => (int) $group['total_members'],
@@ -204,5 +216,41 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         } else {
             return $prepared_array;
         }
+    }
+
+    /**
+     * Generation number for every group: groups under the source (parent 0) are generation 1.
+     *
+     * @param array $groups tree rows keyed by id, each with a parent_id
+     * @return array generation number keyed by group id
+     */
+    private function get_generations( array $groups ): array {
+        $parents = [];
+        foreach ( $groups as $group ) {
+            $parents[ $group['id'] ] = $group['parent_id'] ?? 0;
+        }
+        $max_depth = count( $parents );
+
+        $generations = [];
+        foreach ( array_keys( $parents ) as $id ) {
+            $generations[ $id ] = $this->get_generation( $id, $parents, $generations, $max_depth );
+        }
+        return $generations;
+    }
+
+    /**
+     * Walk up the parent chain until the source node or a group whose generation is already known.
+     */
+    private function get_generation( $id, array $parents, array $known, int $max_depth ): int {
+        $depth = 0;
+        $current = $id;
+        while ( !empty( $current ) && isset( $parents[ $current ] ) && $depth < $max_depth ) {
+            if ( isset( $known[ $current ] ) ) {
+                return $depth + $known[ $current ];
+            }
+            $depth++;
+            $current = $parents[ $current ];
+        }
+        return max( $depth, 1 );
     }
 }

@@ -10,6 +10,7 @@ class GenMapper {
     this.plugin_uri = window.wpApiGenmapper.plugin_uri
     this.showMetrics = window.genApiTemplate.show_metrics === "1"
     this.showIcons = window.genApiTemplate.show_icons === "1"
+    this.showCoaching = window.genApiTemplate.show_coaching === "1"
     this.appVersion = '0.2.16'
 
     this.language = 'en'
@@ -249,7 +250,7 @@ class GenMapper {
         .nodeSize([template.settings.nodeSize.width,
           template.settings.nodeSize.height])
         .separation(function separation (a, b) {
-          return a.parent === b.parent ? 1 : 1.2
+          return a.parent === b.parent ? 1 : 1.3
         })
 
     const stratifiedData = d3.stratify()(this.data)
@@ -338,6 +339,9 @@ class GenMapper {
           classes.push('node--dummyroot')
         }
         classes.push(d.data.active ? 'node--active' : 'node--inactive')
+        if (this.showCoaching && d.data.coached) {
+          classes.push('node--coached')
+        }
         if (this.showIcons) {
           if (d.data.health_metrics_baptism) {
             classes.push('health--baptism')

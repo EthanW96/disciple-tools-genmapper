@@ -80,6 +80,32 @@
                     </tr>
                     <tr>
                         <td>
+                            <label for="genmapper-show-generation">
+                                <b><?php esc_html_e( 'Show generation labels?', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="dt_genmapper_show_generation" <?php if ($show_generation): ?>checked<?php endif; ?> id="genmapper-show-generation">
+                            <p>
+                                <?php esc_html_e( 'Shows the generation number (Gen 1, Gen 2, ...) beside each group circle.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="genmapper-show-coaching">
+                                <b><?php esc_html_e( 'Highlight groups receiving coaching?', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="dt_genmapper_show_coaching" <?php if ($show_coaching): ?>checked<?php endif; ?> id="genmapper-show-coaching">
+                            <p>
+                                <?php esc_html_e( 'Fills the circle of groups that have at least one coach, so you can see at a glance which groups are being coached.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             <label for="genmapper-connection-display">
                                 <b><?php esc_html_e( 'Show on group circles', 'disciple-tools-genmapper' )?></b>
                             </label>

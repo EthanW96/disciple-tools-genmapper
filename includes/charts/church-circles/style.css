@@ -31,6 +31,34 @@
     stroke: #e7e7e7;
 }
 
+/* Groups receiving coaching (setting: dt_genmapper_show_coaching) */
+.node--coached .node-church-box {
+    fill: #d4e4f1;
+}
+
+.coaching-legend {
+    margin-top: 4px;
+}
+
+.coaching-legend__swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin: 0 4px 0 12px;
+    border: 2px solid #000;
+    border-radius: 50%;
+    background: #fff;
+    vertical-align: middle;
+}
+
+.coaching-legend__swatch--coached {
+    background: #d4e4f1;
+}
+
+.node--inactive.node--coached .node-church-box {
+    fill-opacity: .4;
+}
+
 .health-image {
     opacity: .1;
 }
