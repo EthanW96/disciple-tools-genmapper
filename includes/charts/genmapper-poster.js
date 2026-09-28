@@ -204,10 +204,14 @@ class GenMapperPoster {
         // ATTEMPT 11 FIX: Exact legacy constants and calculations
         const boxHeight = 80; // From legacy code
         const marginTop = 50;  // From legacy code
+        // Room beside the outermost circles for their text lines (half a node width) so names aren't cut off
+        const sidePadding = 170;
+        // The last generation needs room for its circle plus the four text lines underneath
+        const nodeBottom = boxHeight + 4 * 20;
 
-        const totalHeight = Math.max(600, marginTop + (maxY - minY) + boxHeight + marginTop);
-        const totalWidthLeft = Math.max(500, -minX + boxHeight * 1.5 / 2 + 20);
-        const totalWidthRight = Math.max(500, maxX + boxHeight * 1.5 / 2 + 20);
+        const totalHeight = Math.max(600, marginTop + (maxY - minY) + nodeBottom + marginTop);
+        const totalWidthLeft = Math.max(500, -minX + sidePadding);
+        const totalWidthRight = Math.max(500, maxX + sidePadding);
 
         return {
             minX, maxX, minY, maxY,

@@ -33,7 +33,7 @@
 
 /* Groups receiving coaching (setting: dt_genmapper_show_coaching) */
 .node--coached .node-church-box {
-    fill: #d4e4f1;
+    fill: #9fc3e2;
 }
 
 .coaching-legend {
@@ -52,7 +52,7 @@
 }
 
 .coaching-legend__swatch--coached {
-    background: #d4e4f1;
+    background: #9fc3e2;
 }
 
 .node--inactive.node--coached .node-church-box {
