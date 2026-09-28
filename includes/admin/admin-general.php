@@ -14,6 +14,7 @@ DT_Genmapper_Tab_General::instance();
 class DT_Genmapper_Tab_General
 {
     private static $_instance = null;
+    const CHART_LABEL_MAX_LENGTH = 50;
 
 
     /**
@@ -37,6 +38,7 @@ class DT_Genmapper_Tab_General
         $show_health_metrics = get_option( 'dt_genmapper_show_health_metrics', false );
         $collapse_health_metrics_fields = get_option( 'dt_genmapper_collapse_metrics', true );
         $connection_display = get_option( 'dt_genmapper_connection_display', 'coach' );
+        $chart_label = get_option( 'dt_genmapper_chart_label', '' );
         $nonce = wp_create_nonce( static::class );
         include DT_Genmapper_Metrics::includes_dir() . 'template-admin-general.php';
     }
@@ -67,5 +69,8 @@ class DT_Genmapper_Tab_General
 
         $connection_display = ( isset( $_POST["dt_genmapper_connection_display"] ) && $_POST["dt_genmapper_connection_display"] === 'leaders' ) ? 'leaders' : 'coach';
         update_option( 'dt_genmapper_connection_display', $connection_display );
+
+        $chart_label = isset( $_POST["dt_genmapper_chart_label"] ) ? sanitize_text_field( wp_unslash( $_POST["dt_genmapper_chart_label"] ) ) : '';
+        update_option( 'dt_genmapper_chart_label', mb_substr( $chart_label, 0, self::CHART_LABEL_MAX_LENGTH ) );
     }
 }

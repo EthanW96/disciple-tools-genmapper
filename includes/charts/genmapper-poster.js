@@ -278,12 +278,14 @@ class GenMapperPoster {
         const pageWidth = printType === 'horizontal' ? '17in' : '11in';
         const pageHeight = printType === 'horizontal' ? '11in' : '17in';
 
+        const posterTitle = this.escapeHtml(this.getChartLabel());
+
         const minimalHtml = `
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset="UTF-8">
-                <title>GenMapper Poster - Centered with Margin</title>
+                <title>${posterTitle} Poster</title>
                 <style>
                     /* ATTEMPT 13 FIX: Add top margin while preserving horizontal centering */
                     * {
@@ -347,6 +349,18 @@ class GenMapperPoster {
         `;
 
         return minimalHtml;
+    }
+
+    // Chart label configured in the plugin settings (localized via wpApiBase)
+    getChartLabel() {
+        const base = window.wpApiBase;
+        return (base && base.translations && base.translations.title) || 'Gen Mapper';
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     showAlert(message) {

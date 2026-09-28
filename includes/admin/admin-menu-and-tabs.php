@@ -98,7 +98,8 @@ class DT_Genmapper_Metrics_Menu {
      * @since 0.1
      */
     public function register_menu() {
-        add_submenu_page( 'dt_extensions', __( 'Genmapper', 'dt_genmapper_plugin' ), __( 'Genmapper', 'dt_genmapper_plugin' ), 'manage_dt', $this->token, [ $this, 'content' ] );
+        $label = DT_Genmapper_Metrics::chart_label();
+        add_submenu_page( 'dt_extensions', $label, $label, 'manage_dt', $this->token, [ $this, 'content' ] );
     }
 
     /**

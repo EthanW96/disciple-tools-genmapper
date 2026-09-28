@@ -97,6 +97,17 @@ class DT_Genmapper_Metrics {
         return plugin_dir_url( __FILE__ );
     }
 
+    /**
+     * Display label for the charts (metrics menu, admin menu, print titles).
+     * Configurable in the plugin's admin settings; falls back to "Gen Mapper".
+     *
+     * @return string
+     */
+    public static function chart_label() {
+        $label = trim( (string) get_option( 'dt_genmapper_chart_label', '' ) );
+        return $label !== '' ? $label : __( 'Gen Mapper', 'disciple-tools-genmapper' );
+    }
+
     private static $_instance = null;
     public static function instance() {
         if ( is_null( self::$_instance ) ) {

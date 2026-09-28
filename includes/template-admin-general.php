@@ -7,6 +7,33 @@
                    style="max-width: 700px; margin-bottom: 25px;">
                 <thead>
                     <tr>
+                        <th><b><?php esc_html_e( 'General', 'disciple-tools-genmapper' ) ?></b></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <label for="genmapper-chart-label">
+                                <b><?php esc_html_e( 'Chart menu label', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="text" name="dt_genmapper_chart_label" id="genmapper-chart-label"
+                                   value="<?php echo esc_attr( $chart_label ) ?>"
+                                   maxlength="<?php echo esc_attr( DT_Genmapper_Tab_General::CHART_LABEL_MAX_LENGTH ) ?>"
+                                   placeholder="<?php esc_attr_e( 'Gen Mapper', 'disciple-tools-genmapper' ) ?>">
+                            <p>
+                                <?php esc_html_e( 'The name shown for these charts in the Metrics menu, the admin menu and printed posters. Leave blank to use "Gen Mapper".', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="widefat striped"
+                   style="max-width: 700px; margin-bottom: 25px;">
+                <thead>
+                    <tr>
                         <th><b><?php esc_html_e( 'Church Circles', 'disciple-tools-genmapper' ) ?></b></th>
                         <th></th>
                     </tr>
