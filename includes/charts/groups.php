@@ -83,7 +83,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
             'wp-i18n'
         ], filemtime( plugin_dir_path( __FILE__ ) . $this->js_file_name ), true);
 
-        $this->print_pack_scripts();
+        $this->print_pack_scripts( $group_fields );
 
         // Localize script with array data
         wp_localize_script(
@@ -108,9 +108,37 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
     }
 
     /**
-     * Print pack (one-page overview + a page per first-generation tree) for the Groups chart
+     * Terms as named in this site's D.T settings (e.g. "Church" may be renamed "Ecclesia"),
+     * so printed pages use the site's own words.
+     *
+     * @param array $group_fields field settings for the groups post type
+     * @return array
      */
-    private function print_pack_scripts() {
+    private function dt_terms( array $group_fields ): array {
+        $types = $group_fields['group_type']['default'] ?? [];
+        $statuses = $group_fields['group_status']['default'] ?? [];
+        $other_types = array_map(
+            function ( $type ) {
+                return $type['label'] ?? '';
+            },
+            array_diff_key( $types, [ 'church' => true ] )
+        );
+        return [
+            'groups' => DT_Posts::get_label_for_post_type( 'groups' ),
+            'church' => $types['church']['label'] ?? __( 'Church', 'disciple-tools-genmapper' ),
+            'other_types' => implode( ' / ', array_filter( $other_types ) ),
+            'active' => $statuses['active']['label'] ?? __( 'Active', 'disciple-tools-genmapper' ),
+            'inactive' => $statuses['inactive']['label'] ?? __( 'Inactive', 'disciple-tools-genmapper' ),
+        ];
+    }
+
+    /**
+     * Print pack (one-page overview + a page per first-generation tree) for the Groups chart
+     *
+     * @param array $group_fields field settings for the groups post type
+     */
+    private function print_pack_scripts( array $group_fields ) {
+        $terms = $this->dt_terms( $group_fields );
         $dir = trailingslashit( plugin_dir_url( __FILE__ ) ) . 'print-pack/';
         $path = plugin_dir_path( __FILE__ ) . 'print-pack/';
 
@@ -125,23 +153,23 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'chart_label' => DT_Genmapper_Metrics::chart_label(),
                 'print_title' => __( 'Print', 'disciple-tools-genmapper' ),
                 'overview_title' => __( 'Overview', 'disciple-tools-genmapper' ),
-                'overview_subtitle' => __( 'All groups by generation. Each row shows the group name and its leader.', 'disciple-tools-genmapper' ),
+                /* translators: %s: the site's name for groups (plural), e.g. Groups */
+                'overview_subtitle' => sprintf( __( '%s by generation. Each row shows the name and the leader.', 'disciple-tools-genmapper' ), $terms['groups'] ),
                 'printed' => __( 'Printed', 'disciple-tools-genmapper' ),
                 'printed_date' => date_i18n( get_option( 'date_format' ) ),
                 'gen_prefix' => __( 'Gen', 'disciple-tools-genmapper' ),
-                'legend_church' => __( 'Church', 'disciple-tools-genmapper' ),
-                'legend_group' => __( 'Group', 'disciple-tools-genmapper' ),
-                'legend_inactive' => __( 'Inactive', 'disciple-tools-genmapper' ),
+                'legend_church' => $terms['church'],
+                'legend_group' => $terms['other_types'],
+                'legend_inactive' => $terms['inactive'],
                 'legend_coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
-                'stat_groups' => __( 'groups', 'disciple-tools-genmapper' ),
-                'stat_churches' => __( 'churches', 'disciple-tools-genmapper' ),
-                'stat_active' => __( 'active', 'disciple-tools-genmapper' ),
-                'stat_coached' => __( 'coached', 'disciple-tools-genmapper' ),
+                'stat_groups' => $terms['groups'],
+                'stat_active' => $terms['active'],
                 'paper' => __( 'Paper', 'disciple-tools-genmapper' ),
                 'orientation' => __( 'Orientation', 'disciple-tools-genmapper' ),
                 'landscape' => __( 'Landscape', 'disciple-tools-genmapper' ),
                 'portrait' => __( 'Portrait', 'disciple-tools-genmapper' ),
-                'include_overview' => __( 'One-page overview of all groups', 'disciple-tools-genmapper' ),
+                /* translators: %s: the site's name for groups (plural), e.g. Groups */
+                'include_overview' => sprintf( __( 'One-page overview of all %s', 'disciple-tools-genmapper' ), $terms['groups'] ),
                 'include_trees' => __( 'A detailed page for each first-generation tree', 'disciple-tools-genmapper' ),
                 'names_about' => __( 'Names print at about', 'disciple-tools-genmapper' ),
                 'small_text_trees' => __( 'Small text on:', 'disciple-tools-genmapper' ),
@@ -149,7 +177,8 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'print' => __( 'Print', 'disciple-tools-genmapper' ),
                 'cancel' => __( 'Cancel', 'disciple-tools-genmapper' ),
                 'classic_poster' => __( 'Classic large poster', 'disciple-tools-genmapper' ),
-                'nothing_to_print' => __( 'There are no groups on the chart to print.', 'disciple-tools-genmapper' ),
+                /* translators: %s: the site's name for groups (plural), e.g. Groups */
+                'nothing_to_print' => sprintf( __( 'There is nothing on the chart to print (%s).', 'disciple-tools-genmapper' ), $terms['groups'] ),
                 'print_failed' => __( 'The print window could not be opened. Please try again.', 'disciple-tools-genmapper' ),
             ],
         ] );

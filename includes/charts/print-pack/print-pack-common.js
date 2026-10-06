@@ -158,13 +158,14 @@
     const statsLine = (summary) => {
         const t = strings();
         const percent = summary.groups ? Math.round((100 * summary.coached) / summary.groups) : 0;
+        // "Label: count" uses the site's D.T terms as-is (no guessing at plurals of custom names)
         const parts = [
-            `${summary.groups} ${t.stat_groups}`,
-            `${summary.churches} ${t.stat_churches}`,
-            `${summary.active} ${t.stat_active}`,
+            `${t.stat_groups}: ${summary.groups}`,
+            `${t.legend_church}: ${summary.churches}`,
+            `${t.stat_active}: ${summary.active}`,
         ];
         if (showCoaching()) {
-            parts.push(`${summary.coached} ${t.stat_coached} (${percent}%)`);
+            parts.push(`${t.legend_coached}: ${summary.coached} (${percent}%)`);
         }
         const generations = Object.keys(summary.byGeneration).sort((a, b) => a - b)
             .map((generation) => `${t.gen_prefix} ${generation}: ${summary.byGeneration[generation]}`);
