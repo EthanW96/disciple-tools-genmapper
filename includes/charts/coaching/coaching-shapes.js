@@ -18,32 +18,44 @@
     };
     const CORRIDOR = 50; // width of the band joining a group to its coached child (narrow enough to clear neighbouring trees)
     const RING = 4; // outline thickness
+    // A group inside several coaching groups gets nested outlines: each further shape is this much smaller there
+    const NEST_STEP = RING + 5;
     const TINT_OPACITY = 0.16;
     const TRIANGLE_HALF_WIDTH = 46;
     const NAME_SIZE = 15;
     const MEMBERS_SIZE = 13;
 
-    const pieceBox = (point, geometry) => {
-        const half = geometry.slotWidth / 2 - geometry.sideGap;
-        return `<rect x="${point.x - half}" y="${point.y - geometry.above}" width="${half * 2}" height="${geometry.above + geometry.below}" rx="40" ry="40"/>`;
+    const pieceBox = (point, geometry, inset) => {
+        const half = geometry.slotWidth / 2 - geometry.sideGap - inset;
+        const radius = Math.max(8, 40 - inset);
+        return `<rect x="${point.x - half}" y="${point.y - geometry.above + inset}" width="${half * 2}" height="${geometry.above + geometry.below - inset * 2}" rx="${radius}" ry="${radius}"/>`;
     };
 
     // Same curve as the chart's links (genmapper.js redraw)
-    const corridor = (parent, child) => {
+    const corridor = (parent, child, inset) => {
         const midY = (child.y + (parent.y + CIRCLE)) / 2;
-        return `<path d="M${child.x},${child.y}C${child.x},${midY} ${parent.x},${midY} ${parent.x},${parent.y + CIRCLE}"/>`;
+        return `<path stroke-width="${CORRIDOR - inset * 2}" d="M${child.x},${child.y}C${child.x},${midY} ${parent.x},${midY} ${parent.x},${parent.y + CIRCLE}"/>`;
     };
 
-    const sideCorridor = (from, to) => `<path d="M${from.x},${from.y + CIRCLE / 2}H${to.x}"/>`;
+    const sideCorridor = (from, to, inset) => `<path stroke-width="${CORRIDOR - inset * 2}" d="M${from.x},${from.y + CIRCLE / 2}H${to.x}"/>`;
 
-    const pieces = (component, positions, color, geometry) => {
+    // inset(id): how much smaller this shape is drawn at a group shared with earlier shapes
+    const pieces = (component, positions, color, geometry, inset) => {
         const spacer = positions.get(component.spacerId);
-        const members = component.ids.map((id) => positions.get(id)).filter(Boolean);
-        const root = positions.get(component.rootId);
-        const links = members.filter((point) => point.parentId && component.ids.includes(point.parentId))
-            .map((point) => corridor(positions.get(point.parentId), point));
-        return [spacer, ...members].filter(Boolean).map((point) => pieceBox(point, geometry)).join('')
-            + `<g fill="none" stroke="${color}" stroke-width="${CORRIDOR}" stroke-linecap="round">${links.join('')}${spacer && root ? sideCorridor(spacer, root) : ''}</g>`;
+        const memberIds = component.ids.filter((id) => positions.has(id));
+        const links = memberIds.filter((id) => component.ids.includes(positions.get(id).parentId))
+            .map((id) => corridor(positions.get(positions.get(id).parentId), positions.get(id), inset(id)));
+        const side = spacer && positions.get(component.rootId) ? sideCorridor(spacer, positions.get(component.rootId), inset(component.rootId)) : '';
+        return (spacer ? pieceBox(spacer, geometry, 0) : '')
+            + memberIds.map((id) => pieceBox(positions.get(id), geometry, inset(id))).join('')
+            + `<g fill="none" stroke="${color}" stroke-linecap="round">${links.join('')}${side}</g>`;
+    };
+
+    // For each group: the shapes (by index) that contain it, in drawing order
+    const shapesByGroup = (components) => {
+        const map = new Map();
+        components.forEach((component, index) => component.ids.forEach((id) => map.set(id, (map.get(id) || []).concat(index))));
+        return map;
     };
 
     const ringFilter = (id, color) => `<filter id="${id}" x="-5%" y="-5%" width="110%" height="110%">
@@ -83,9 +95,11 @@
         if (!components.length) {
             return '';
         }
+        const shared = shapesByGroup(components);
+        const insetFor = (index) => (id) => Math.max(0, (shared.get(id) || [index]).indexOf(index)) * NEST_STEP;
         const filters = components.map((component, index) => ringFilter(`${idPrefix}-ring-${index}`, component.group.color)).join('');
-        const tints = components.map((component) => `<g opacity="${TINT_OPACITY}" fill="${component.group.color}">${pieces(component, positions, component.group.color, geometry)}</g>`).join('');
-        const rings = components.map((component, index) => `<g filter="url(#${idPrefix}-ring-${index})">${pieces(component, positions, '#000', geometry)}</g>`).join('');
+        const tints = components.map((component, index) => `<g opacity="${TINT_OPACITY}" fill="${component.group.color}">${pieces(component, positions, component.group.color, geometry, insetFor(index))}</g>`).join('');
+        const rings = components.map((component, index) => `<g filter="url(#${idPrefix}-ring-${index})">${pieces(component, positions, '#000', geometry, insetFor(index))}</g>`).join('');
         const triangles = components.map((component) => triangle(positions.get(component.spacerId), component.group, geometry)).join('');
         return `<defs>${filters}</defs><g class="coaching-tints">${tints}</g><g class="coaching-rings">${rings}</g><g class="coaching-triangles">${triangles}</g>`;
     };
