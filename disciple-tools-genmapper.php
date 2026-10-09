@@ -108,6 +108,29 @@ class DT_Genmapper_Metrics {
         return $label !== '' ? $label : __( 'Gen Mapper', 'disciple-tools-genmapper' );
     }
 
+    /**
+     * Group Type options on this site (key => label), as named in the D.T settings.
+     *
+     * @return array
+     */
+    public static function group_type_options() {
+        $fields = DT_Posts::get_post_field_settings( 'groups' );
+        return array_map( function ( $option ) {
+            return $option['label'] ?? '';
+        }, $fields['group_type']['default'] ?? [] );
+    }
+
+    /**
+     * The Group Type used for coaching groups, or '' when coaching groups are off
+     * (also when the saved type no longer exists on the site).
+     *
+     * @return string
+     */
+    public static function coaching_group_type() {
+        $type = (string) get_option( 'dt_genmapper_coaching_group_type', '' );
+        return $type !== '' && array_key_exists( $type, self::group_type_options() ) ? $type : '';
+    }
+
     private static $_instance = null;
     public static function instance() {
         if ( is_null( self::$_instance ) ) {

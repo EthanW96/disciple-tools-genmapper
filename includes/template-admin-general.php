@@ -132,6 +132,24 @@
                     </tr>
                     <tr>
                         <td>
+                            <label for="genmapper-coaching-group-type">
+                                <b><?php esc_html_e( 'Coaching groups', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <select name="dt_genmapper_coaching_group_type" id="genmapper-coaching-group-type">
+                                <option value="" <?php selected( $coaching_group_type, '' ); ?>><?php esc_html_e( 'None (off)', 'disciple-tools-genmapper' ) ?></option>
+                                <?php foreach ( $group_type_options as $type_key => $type_label ) : ?>
+                                    <option value="<?php echo esc_attr( $type_key ) ?>" <?php selected( $coaching_group_type, $type_key ); ?>><?php echo esc_html( $type_label ) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p>
+                                <?php esc_html_e( 'Groups of this Group Type are drawn as triangles. Each is enclosed with the groups it coaches: a group is coached by a coaching group when one of the group\'s coaches is a member of that coaching group.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             <label for="genmapper-connection-display">
                                 <b><?php esc_html_e( 'Show on group circles', 'disciple-tools-genmapper' )?></b>
                             </label>

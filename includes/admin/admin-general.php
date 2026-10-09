@@ -51,6 +51,8 @@ class DT_Genmapper_Tab_General
         $show_people_count = get_option( 'dt_genmapper_show_people_count', false );
         $show_unmultiplied = get_option( 'dt_genmapper_show_unmultiplied', false );
         $connection_display = get_option( 'dt_genmapper_connection_display', 'coach' );
+        $coaching_group_type = DT_Genmapper_Metrics::coaching_group_type();
+        $group_type_options = DT_Genmapper_Metrics::group_type_options();
         $chart_label = get_option( 'dt_genmapper_chart_label', '' );
         $nonce = wp_create_nonce( static::class );
         include DT_Genmapper_Metrics::includes_dir() . 'template-admin-general.php';
@@ -73,6 +75,10 @@ class DT_Genmapper_Tab_General
 
         $connection_display = ( isset( $_POST["dt_genmapper_connection_display"] ) && $_POST["dt_genmapper_connection_display"] === 'leaders' ) ? 'leaders' : 'coach';
         update_option( 'dt_genmapper_connection_display', $connection_display );
+
+        $coaching_group_type = isset( $_POST['dt_genmapper_coaching_group_type'] ) ? sanitize_key( wp_unslash( $_POST['dt_genmapper_coaching_group_type'] ) ) : '';
+        $is_known_type = array_key_exists( $coaching_group_type, DT_Genmapper_Metrics::group_type_options() );
+        update_option( 'dt_genmapper_coaching_group_type', $is_known_type ? $coaching_group_type : '' );
 
         $chart_label = isset( $_POST["dt_genmapper_chart_label"] ) ? sanitize_text_field( wp_unslash( $_POST["dt_genmapper_chart_label"] ) ) : '';
         update_option( 'dt_genmapper_chart_label', mb_substr( $chart_label, 0, self::CHART_LABEL_MAX_LENGTH ) );

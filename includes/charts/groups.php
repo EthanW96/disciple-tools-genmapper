@@ -51,6 +51,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'show_coaching' => get_option( "dt_genmapper_show_coaching", false ),
                 'show_generation' => get_option( "dt_genmapper_show_generation", false ),
                 'show_people_count' => get_option( "dt_genmapper_show_people_count", false ),
+                'coaching_enabled' => DT_Genmapper_Metrics::coaching_group_type() !== '',
             ]
         );
 
@@ -76,6 +77,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'show_coaching' => get_option( "dt_genmapper_show_coaching", false ),
                 'show_generation' => get_option( "dt_genmapper_show_generation", false ),
                 'show_people_count' => get_option( "dt_genmapper_show_people_count", false ),
+                'coaching_enabled' => DT_Genmapper_Metrics::coaching_group_type() !== '',
             ]
         );
         wp_enqueue_script('dt_' . $this->slug . '_script', trailingslashit( plugin_dir_url( __FILE__ ) ) . $this->js_file_name, [
@@ -106,6 +108,8 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                     'string4' => __( 'Reset', 'disciple-tools-genmapper' ),
                     'coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
                     'not_coached' => __( 'No coach', 'disciple-tools-genmapper' ),
+                    /* translators: %s: the site's label for the coaching group type, e.g. Team */
+                    'coaching_legend' => sprintf( __( '%s: encloses the groups it coaches', 'disciple-tools-genmapper' ), $this->coaching_type_label() ),
                 ]
             ]
         );
@@ -221,11 +225,17 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 "name" => "source"
             ]
         ];
+        $coaching_type = DT_Genmapper_Metrics::coaching_group_type();
         $groups = dt_genmapper_plugin_queries()->tree( 'multiplying_groups_only', [
             'include_unmultiplied' => (bool) get_option( 'dt_genmapper_show_unmultiplied', false ),
+            'exclude_group_type' => $coaching_type,
         ] );
         if (is_wp_error( $groups )) {
             return $groups;
+        }
+        $coaching = $this->coaching_by_group( $coaching_type );
+        if ( is_wp_error( $coaching ) ) {
+            return $coaching;
         }
 
         // Generations come from the full tree so a rebased view keeps real numbers.
@@ -275,6 +285,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 "post_type" => "groups",
                 "coach" => $group["coach"],
                 "coached" => !empty( $group['has_coach'] ),
+                "coaching" => $coaching[ (int) ( $group['id'] ?? 0 ) ] ?? [],
                 /* translators: %d: generation number of the group, 1 = first generation */
                 "generation_label" => sprintf( __( 'Gen %d', 'disciple-tools-genmapper' ), $generations[ $group['id'] ] ?? 1 ),
                 "generation" => $generations[ $group['id'] ] ?? 1,
@@ -304,6 +315,41 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         } else {
             return $prepared_array;
         }
+    }
+
+    private function coaching_type_label(): string {
+        $type = DT_Genmapper_Metrics::coaching_group_type();
+        return $type === '' ? '' : ( DT_Genmapper_Metrics::group_type_options()[ $type ] ?? $type );
+    }
+
+    /**
+     * Coaching groups covering each group: group id => [ [id, name, members], ... ]
+     *
+     * @param string $coaching_type group type key for coaching groups ('' = off)
+     * @return array|WP_Error
+     */
+    private function coaching_by_group( string $coaching_type ) {
+        if ( $coaching_type === '' ) {
+            return [];
+        }
+        $result = dt_genmapper_plugin_queries()->coaching_coverage( $coaching_type );
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+        $coaching_groups = $result['coaching_groups'];
+        return array_map( function ( $coaching_ids ) use ( $coaching_groups ) {
+            return array_values( array_filter( array_map( function ( $id ) use ( $coaching_groups ) {
+                if ( !isset( $coaching_groups[ $id ] ) ) {
+                    return null;
+                }
+                $coaching_group = $coaching_groups[ $id ];
+                return [
+                    'id' => $coaching_group['id'],
+                    'name' => $coaching_group['name'],
+                    'members' => implode( ', ', $coaching_group['members'] ),
+                ];
+            }, $coaching_ids ) ) );
+        }, $result['coverage'] );
     }
 
     /**
