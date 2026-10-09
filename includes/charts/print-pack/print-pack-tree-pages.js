@@ -34,9 +34,23 @@
         return map;
     };
 
-    // Coaching triangle slots for the tree's first group live beside it, under the hidden root
-    const rootSpacers = (tree) => (tree.parent ? tree.parent.children : [])
-        .filter((node) => common.isSpacer(node) && node.data.component_root === String(tree.data.id));
+    // Coaching triangle slots for the tree's first group live beside it, under the hidden root.
+    // On screen side-by-side trees can share one triangle; each printed page gets its own copy.
+    const rootSpacers = (tree) => {
+        const treeKey = String(tree.data.id);
+        const treeIds = new Set(tree.descendants().map((node) => String(node.data.id)));
+        return (tree.parent ? tree.parent.children : [])
+            .filter((node) => common.isSpacer(node) && (node.data.component_roots || [node.data.component_root]).includes(treeKey))
+            .map((node) => ({
+                data: {
+                    ...node.data,
+                    id: `${node.data.id}-page-${treeKey}`,
+                    component_root: treeKey,
+                    component_roots: [treeKey],
+                    component_ids: node.data.component_ids.filter((id) => treeIds.has(String(id))),
+                },
+            }));
+    };
 
     // Fresh hierarchy so the screen layout is never modified
     const layoutTree = (tree) => {

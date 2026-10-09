@@ -41,28 +41,64 @@
             .map((root) => ({ root, ids: collect(root) }));
     };
 
-    const spacerRow = (group, component) => ({
-        id: `coaching-${group.id}-${component.root.id}`,
-        parentId: component.root.parentId,
+    // One triangle slot for a run of side-by-side components (siblings) of the same coaching group.
+    // side 'after' puts the slot right of the run instead of left of it.
+    const spacerRow = (group, run, side) => ({
+        id: `coaching-${group.id}-${run[0].root.id}`,
+        parentId: run[0].root.parentId,
         name: group.name,
         spacer: true,
         node_class: 'node--spacer',
         active: true,
         coaching_group: group,
-        component_root: key(component.root.id),
-        component_ids: component.ids,
+        component_root: key(run[0].root.id),
+        component_roots: run.map((component) => key(component.root.id)),
+        component_ids: run.flatMap((component) => component.ids),
+        slot_side: side,
     });
 
-    // Siblings that share a coaching group sit together; each triangle slot goes just before its group
-    const orderChildren = (children, spacersByRoot) => {
+    // A band comes down into the run when its parent group sits inside another coaching shape.
+    // Put the triangle on the side away from it: runs in the right half of the siblings get it on their right.
+    const slotSide = (run, ordered, parentRow) => {
+        const parentInShape = parentRow && parentRow.id !== ROOT_ID && coachingOf(parentRow).length > 0;
+        if (!parentInShape) {
+            return 'before';
+        }
+        const first = ordered.findIndex((row) => key(row.id) === key(run[0].root.id));
+        const last = first + run.length - 1;
+        return (first + last) / 2 >= (ordered.length - 1) / 2 ? 'after' : 'before';
+    };
+
+    // Siblings that share a coaching group sit together
+    const clusterOrder = (children) => {
         const clusters = new Map();
         children.forEach((child) => {
             const first = coachingOf(child)[0];
             const clusterKey = first ? `c${first.id}` : `own${child.id}`;
             clusters.set(clusterKey, (clusters.get(clusterKey) || []).concat(child));
         });
-        return Array.from(clusters.values()).flat()
-            .flatMap((child) => (spacersByRoot.get(key(child.id)) || []).concat(child));
+        return Array.from(clusters.values()).flat();
+    };
+
+    // Components of one coaching group whose roots are next to each other share one triangle and shape.
+    // A run breaks at a gap, or at a group that also starts another coaching group's shape.
+    const siblingRuns = (orderedSiblings, componentsByRoot, group) => {
+        const runs = [];
+        let run = [];
+        orderedSiblings.forEach((sibling) => {
+            const rooted = componentsByRoot.get(key(sibling.id)) || [];
+            const component = rooted.find((item) => key(item.group.id) === key(group.id));
+            const startsOtherShape = rooted.length > 1;
+            if (component && run.length && !startsOtherShape) {
+                run.push(component);
+                return;
+            }
+            if (run.length) {
+                runs.push(run);
+            }
+            run = component ? [component] : [];
+        });
+        return run.length ? runs.concat([run]) : runs;
     };
 
     const decorate = (rows) => {
@@ -81,22 +117,40 @@
             : [{ id: ROOT_ID, parentId: '', name: 'source' }].concat(rows.map((row) => (row === top ? { ...row, parentId: ROOT_ID } : row)));
 
         const children = childrenByParent(base);
-        const spacersByRoot = new Map();
+        const componentsByRoot = new Map();
         groups.forEach((group) => components(base, group, children).forEach((component) => {
             const rootKey = key(component.root.id);
-            spacersByRoot.set(rootKey, (spacersByRoot.get(rootKey) || []).concat(spacerRow(group, component)));
+            componentsByRoot.set(rootKey, (componentsByRoot.get(rootKey) || []).concat({ ...component, group }));
         }));
+
+        // Triangle slots per parent: one per run of side-by-side components, beside the run's first or last group
+        const rowsById = new Map(base.map((row) => [key(row.id), row]));
+        const slotsBefore = new Map();
+        const slotsAfter = new Map();
+        const orderedChildren = new Map();
+        const addSlot = (map, rowKey, spacer) => map.set(rowKey, (map.get(rowKey) || []).concat(spacer));
+        children.forEach((siblings, parentKey) => {
+            const ordered = clusterOrder(siblings);
+            orderedChildren.set(parentKey, ordered);
+            groups.forEach((group) => siblingRuns(ordered, componentsByRoot, group).forEach((run) => {
+                const side = slotSide(run, ordered, rowsById.get(parentKey));
+                const spacer = spacerRow(group, run, side);
+                if (side === 'after') {
+                    addSlot(slotsAfter, key(run[run.length - 1].root.id), spacer);
+                } else {
+                    addSlot(slotsBefore, key(run[0].root.id), spacer);
+                }
+            }));
+        });
 
         // Walk from the root so the output order sets each parent's child order for d3.stratify
         const ordered = [];
         const visit = (row) => {
             ordered.push(row);
-            orderChildren(children.get(key(row.id)) || [], spacersByRoot).forEach((child) => {
-                if (child.spacer) {
-                    ordered.push(child);
-                } else {
-                    visit(child);
-                }
+            (orderedChildren.get(key(row.id)) || []).forEach((child) => {
+                (slotsBefore.get(key(child.id)) || []).forEach((spacer) => ordered.push(spacer));
+                visit(child);
+                (slotsAfter.get(key(child.id)) || []).forEach((spacer) => ordered.push(spacer));
             });
         };
         const root = base.find((row) => row.id === ROOT_ID) || base.find((row) => row.parentId === '');

@@ -34,10 +34,16 @@
         return `<rect x="${point.x - half}" y="${point.y - geometry.above + inset}" width="${half * 2}" height="${geometry.above + geometry.below - inset * 2}" rx="${radius}" ry="${radius}"/>`;
     };
 
-    // Same curve as the chart's links (genmapper.js redraw)
-    const corridor = (parent, child, inset) => {
-        const midY = (child.y + (parent.y + CIRCLE)) / 2;
-        return `<path stroke-width="${CORRIDOR - inset * 2}" d="M${child.x},${child.y}C${child.x},${midY} ${parent.x},${midY} ${parent.x},${parent.y + CIRCLE}"/>`;
+    const GAP_MARGIN = 6; // space kept between a band and the groups in the rows above and below it
+
+    // Bracket-shaped band: down out of the parent's box, along the empty gap between the rows, down into the child.
+    // Groups never sit in that gap, so a band can't cut through another shape's box.
+    const corridor = (parent, child, inset, geometry) => {
+        const gapTop = parent.y + geometry.below;
+        const gapBottom = child.y - geometry.above;
+        const width = Math.max(4, Math.min(CORRIDOR, gapBottom - gapTop - GAP_MARGIN * 2) - inset * 2);
+        const elbowY = (gapTop + gapBottom) / 2;
+        return `<path stroke-width="${width}" stroke-linejoin="round" d="M${parent.x},${parent.y + CIRCLE / 2}V${elbowY}H${child.x}V${child.y + CIRCLE / 2}"/>`;
     };
 
     const sideCorridor = (from, to, inset) => `<path stroke-width="${CORRIDOR - inset * 2}" d="M${from.x},${from.y + CIRCLE / 2}H${to.x}"/>`;
@@ -47,8 +53,11 @@
         const spacer = positions.get(component.spacerId);
         const memberIds = component.ids.filter((id) => positions.has(id));
         const links = memberIds.filter((id) => component.ids.includes(positions.get(id).parentId))
-            .map((id) => corridor(positions.get(positions.get(id).parentId), positions.get(id), inset(id)));
-        const side = spacer && positions.get(component.rootId) ? sideCorridor(spacer, positions.get(component.rootId), inset(component.rootId)) : '';
+            .map((id) => corridor(positions.get(positions.get(id).parentId), positions.get(id), inset(id), geometry));
+        // Band from the triangle along the side-by-side groups of the run (triangle at whichever end it sits)
+        const ends = component.slotSide === 'after' ? component.rootIds.concat(component.spacerId) : [component.spacerId].concat(component.rootIds);
+        const chain = ends.filter((id) => positions.has(id));
+        const side = chain.slice(1).map((id, index) => sideCorridor(positions.get(chain[index]), positions.get(id), inset(id))).join('');
         return (spacer ? pieceBox(spacer, geometry, 0) : '')
             + memberIds.map((id) => pieceBox(positions.get(id), geometry, inset(id))).join('')
             + `<g fill="none" stroke="${color}" stroke-linecap="round">${links.join('')}${side}</g>`;
@@ -92,7 +101,8 @@
         const positions = new Map(items.map((item) => [String(item.row.id), item]));
         const components = items.filter((item) => item.row.spacer).map((item) => ({
             spacerId: String(item.row.id),
-            rootId: item.row.component_root,
+            rootIds: item.row.component_roots || [item.row.component_root],
+            slotSide: item.row.slot_side || 'before',
             ids: item.row.component_ids || [],
             group: item.row.coaching_group,
         }));
