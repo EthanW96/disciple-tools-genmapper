@@ -93,6 +93,32 @@
                     </tr>
                     <tr>
                         <td>
+                            <label for="genmapper-show-people-count">
+                                <b><?php esc_html_e( 'Show number of people?', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="dt_genmapper_show_people_count" <?php if ($show_people_count): ?>checked<?php endif; ?> id="genmapper-show-people-count">
+                            <p>
+                                <?php esc_html_e( 'Shows the group\'s Member Count beside each group circle.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="genmapper-show-unmultiplied">
+                                <b><?php esc_html_e( 'Show groups that haven\'t multiplied?', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="dt_genmapper_show_unmultiplied" <?php if ($show_unmultiplied): ?>checked<?php endif; ?> id="genmapper-show-unmultiplied">
+                            <p>
+                                <?php esc_html_e( 'Also shows first-generation groups that have no child groups yet. When off, only first-generation groups that have multiplied are shown.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             <label for="genmapper-show-coaching">
                                 <b><?php esc_html_e( 'Highlight groups receiving coaching?', 'disciple-tools-genmapper' )?></b>
                             </label>

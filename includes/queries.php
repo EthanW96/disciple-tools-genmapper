@@ -33,6 +33,10 @@ class DT_Genmapper_Plugin_Queries
         $connection_display = get_option( 'dt_genmapper_connection_display', 'coach' );
         $connection_type = $connection_display === 'leaders' ? 'groups_to_leaders' : 'groups_to_coaches';
 
+        // By default only top-level groups that have child groups start a tree.
+        // With include_unmultiplied, top-level groups without children are shown too.
+        $include_unmultiplied = empty( $args['include_unmultiplied'] ) ? 0 : 1;
+
         switch ($query_name) {
             case 'multiplying_groups_only':
                 $query = $wpdb->get_results( $wpdb->prepare("
@@ -107,12 +111,12 @@ class DT_Genmapper_Plugin_Queries
                       WHERE p2p_type = 'groups_to_groups'
                       GROUP BY p2p_from
                     )
-                      AND a.ID IN (
+                    AND ( %d = 1 OR a.ID IN (
                       SELECT DISTINCT (p2p_to)
                       FROM $wpdb->p2p
                       WHERE p2p_type = 'groups_to_groups'
                       GROUP BY p2p_to
-                    )
+                    ) )
                     UNION
                     SELECT
                       p.p2p_from  as id,
@@ -171,7 +175,7 @@ class DT_Genmapper_Plugin_Queries
                       ON genddate1.post_id=p.p2p_from
                       AND genddate1.meta_key = 'end_date'
                     WHERE p.p2p_type = 'groups_to_groups'
-                ", $connection_type, $connection_type ), ARRAY_A);
+                ", $connection_type, $include_unmultiplied, $connection_type ), ARRAY_A);
                 break;
 
             default:

@@ -86,6 +86,10 @@
 
     const showCoaching = () => window.genApiTemplate && window.genApiTemplate.show_coaching === '1';
     const showHealth = () => window.genApiTemplate && window.genApiTemplate.show_icons === '1';
+    const showPeopleCount = () => window.genApiTemplate && window.genApiTemplate.show_people_count === '1';
+
+    // Member Count icon from the group field settings loaded by template.js
+    const peopleIcon = () => (typeof group_fields !== 'undefined' && group_fields.member_count && group_fields.member_count.icon) || '';
 
     // Health practices in the same 3x3 arrangement as the circle on screen (church-circles/template.js)
     const HEALTH_GRID = ['giving', 'fellowship', 'communion', 'baptism', 'prayer', 'leaders', 'bible', 'praise', 'sharing'];
@@ -138,7 +142,8 @@
             // Green outline, as on the chart (church-circles/style.css .health--commitment)
             circles.push({ data: { active: true, group_type: 'church', health_metrics_commitment: true }, label: commitment.label });
         }
-        const icons = showHealth() ? healthIcons() : [];
+        const people = showPeopleCount() && peopleIcon() ? [{ icon: peopleIcon(), label: t.legend_people }] : [];
+        const icons = people.concat(showHealth() ? healthIcons() : []);
         const markerWidth = 11;
         const itemGap = 10;
         const labels = circles.map((item) => item.label).concat(icons.map((item) => item.label));
@@ -245,6 +250,8 @@ ${pagesMarkup.map((markup) => `<section class="pp-page"><svg xmlns="http://www.w
         firstGenerationTrees,
         generationOf,
         showHealth,
+        showPeopleCount,
+        peopleIcon,
         healthGridMarkup,
         summarize,
         circleMarkup,

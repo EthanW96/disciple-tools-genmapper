@@ -19,6 +19,11 @@ let health_fields = group_fields.health_metrics.default;
 const showMetrics = window.genApiTemplate.show_metrics === "1";
 const showIcons = window.genApiTemplate.show_icons === "1";
 const showGeneration = window.genApiTemplate.show_generation === "1";
+const showPeopleCount = window.genApiTemplate.show_people_count === "1";
+// Member Count sits outside the circle's top-left corner (free of Gen label, metrics and buttons)
+const PEOPLE_ICON_SIZE = 13;
+const PEOPLE_TEXT_RIGHT = -boxHeight / 2 + 13;
+const PEOPLE_ICON_X = -boxHeight / 2 - 18;
 
 const metricIcons = {};
 const metricNumbers = [];
@@ -117,6 +122,18 @@ const template = {
       },
     },
     ...metricIcons,
+    ...(showPeopleCount && group_fields.member_count && {
+      "people-icon": {
+        type: "image",
+        attributes: {
+          x: PEOPLE_ICON_X,
+          y: -4,
+          width: PEOPLE_ICON_SIZE,
+          height: PEOPLE_ICON_SIZE,
+          href: group_fields.member_count.icon,
+        },
+      },
+    }),
     "church-box": {
       type: "rect",
       attributes: {
@@ -309,6 +326,23 @@ const template = {
         },
       },
     },
+    ...(showPeopleCount ? [{
+      header: "people_count",
+      svg: {
+        type: "text",
+        attributes: {
+          x: PEOPLE_TEXT_RIGHT,
+          y: 7,
+        },
+        style: {
+          "text-anchor": "end",
+          "font-size": "12px",
+          "font-weight": "bold",
+          fill: "#444",
+          stroke: "none",
+        },
+      },
+    }] : []),
     ...(showGeneration ? [{
       header: "generation_label",
       svg: {

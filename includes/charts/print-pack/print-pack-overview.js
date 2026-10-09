@@ -58,9 +58,19 @@
             }));
     };
 
-    // Size for the longest name so no group name gets cut off
+    const PEOPLE_ICON_RATIO = 0.85; // icon size relative to the name
+    const PEOPLE_GAP_RATIO = 0.3;
+
+    // Member Count after the name: "Name [icon]12" (empty when the setting is off)
+    const peopleText = (node) => (common.showPeopleCount() ? String(node.data.people_count || 0) : '');
+    const peopleWidthAt = (node, size) => {
+        const text = peopleText(node);
+        return text ? size * (PEOPLE_GAP_RATIO * 2 + PEOPLE_ICON_RATIO) + common.measure(text, size) : 0;
+    };
+
+    // Size for the longest name (plus its people count) so no group name gets cut off
     const widestNameAt1pt = (trees) => Math.max(1, ...trees.flatMap((tree) => tree.descendants())
-        .map((node) => common.measure(node.data.name, 1, NAME_WEIGHT)));
+        .map((node) => common.measure(node.data.name, 1, NAME_WEIGHT) + peopleWidthAt(node, 1)));
 
     // Try 1..3 tree columns and keep the arrangement that gives the biggest names
     const planLayout = (trees, page) => {
@@ -111,7 +121,8 @@
         const nameSize = layout.fontSize;
         const cell = cellGeometry(nameSize, layout.genWidth, layout.withHealth);
         const textX = x + cell.textLeft;
-        const name = common.fitText(node.data.name, cell.textWidth, nameSize, NAME_WEIGHT);
+        const peopleWidth = peopleWidthAt(node, nameSize);
+        const name = common.fitText(node.data.name, cell.textWidth - peopleWidth, nameSize, NAME_WEIGHT);
         const leader = common.fitText(node.data.coach, cell.textWidth, cell.leaderSize);
         const inactive = node.data.active ? '' : ' pp-inactive';
         const health = layout.withHealth
@@ -120,7 +131,20 @@
         return common.circleMarkup(node.data, x + cell.radius, y, cell.radius)
             + `<text x="${textX}" y="${y - NAME_BASELINE_GAP_PT}" class="pp-name${inactive}" style="font-size:${nameSize}px">${common.escapeText(name)}</text>`
             + (leader ? `<text x="${textX}" y="${y + LEADER_GAP_PT + cell.leaderSize * NAME_ASCENT}" class="pp-leader" style="font-size:${cell.leaderSize}px">${common.escapeText(leader)}</text>` : '')
+            + peopleMarkup(node, textX + common.measure(name, nameSize, NAME_WEIGHT), y, nameSize)
             + health;
+    };
+
+    const peopleMarkup = (node, x, y, size) => {
+        const text = peopleText(node);
+        if (!text) {
+            return '';
+        }
+        const iconSize = size * PEOPLE_ICON_RATIO;
+        const iconX = x + size * PEOPLE_GAP_RATIO;
+        const baseline = y - NAME_BASELINE_GAP_PT;
+        return `<image href="${common.escapeText(common.peopleIcon())}" x="${iconX}" y="${baseline - iconSize * 0.9}" width="${iconSize}" height="${iconSize}"/>`
+            + `<text x="${iconX + iconSize + size * PEOPLE_GAP_RATIO}" y="${baseline}" class="pp-count" style="font-size:${size}px">${common.escapeText(text)}</text>`;
     };
 
     // Bracket connector: along the parent's row, down a spine, then across to each child
@@ -173,6 +197,7 @@
         .pp-overview .pp-name { font-family: Helvetica, Arial, sans-serif; font-weight: 700; fill: #000; }
         .pp-overview .pp-name.pp-inactive { fill: #888; }
         .pp-overview .pp-leader { font-family: Helvetica, Arial, sans-serif; fill: #555; }
+        .pp-overview .pp-count { font-family: Helvetica, Arial, sans-serif; fill: #444; }
         .pp-overview .pp-gen { font: 700 8px Helvetica, Arial, sans-serif; fill: #777; }
         .pp-overview .pp-connector { fill: none; stroke: #bbb; stroke-width: .6; }
         .pp-overview .pp-health.pp-inactive { opacity: .5; }

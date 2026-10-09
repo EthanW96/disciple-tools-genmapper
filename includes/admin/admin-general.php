@@ -15,6 +15,15 @@ class DT_Genmapper_Tab_General
 {
     private static $_instance = null;
     const CHART_LABEL_MAX_LENGTH = 50;
+    const CHECKBOX_OPTIONS = [
+        'dt_genmapper_show_health_icons',
+        'dt_genmapper_show_health_metrics',
+        'dt_genmapper_collapse_metrics',
+        'dt_genmapper_show_coaching',
+        'dt_genmapper_show_generation',
+        'dt_genmapper_show_people_count',
+        'dt_genmapper_show_unmultiplied',
+    ];
 
 
     /**
@@ -39,6 +48,8 @@ class DT_Genmapper_Tab_General
         $collapse_health_metrics_fields = get_option( 'dt_genmapper_collapse_metrics', true );
         $show_coaching = get_option( 'dt_genmapper_show_coaching', false );
         $show_generation = get_option( 'dt_genmapper_show_generation', false );
+        $show_people_count = get_option( 'dt_genmapper_show_people_count', false );
+        $show_unmultiplied = get_option( 'dt_genmapper_show_unmultiplied', false );
         $connection_display = get_option( 'dt_genmapper_connection_display', 'coach' );
         $chart_label = get_option( 'dt_genmapper_chart_label', '' );
         $nonce = wp_create_nonce( static::class );
@@ -51,34 +62,13 @@ class DT_Genmapper_Tab_General
             return;
         }
 
-        if ( get_option( 'dt_genmapper_show_health_icons' ) === false ) {
-            add_option( 'dt_genmapper_show_health_icons', !empty( $_POST["dt_genmapper_show_health_icons"] ) );
-        } else {
-            update_option( 'dt_genmapper_show_health_icons', !empty( $_POST["dt_genmapper_show_health_icons"] ) );
-        }
-
-        if ( get_option( 'dt_genmapper_show_health_metrics' ) === false ) {
-            add_option( 'dt_genmapper_show_health_metrics', !empty( $_POST["dt_genmapper_show_health_metrics"] ) );
-        } else {
-            update_option( 'dt_genmapper_show_health_metrics', !empty( $_POST["dt_genmapper_show_health_metrics"] ) );
-        }
-
-        if ( get_option( 'dt_genmapper_collapse_metrics' ) === false ) {
-            add_option( 'dt_genmapper_collapse_metrics', !empty( $_POST["dt_genmapper_collapse_metrics"] ) );
-        } else {
-            update_option( 'dt_genmapper_collapse_metrics', !empty( $_POST["dt_genmapper_collapse_metrics"] ) );
-        }
-
-        if ( get_option( 'dt_genmapper_show_coaching' ) === false ) {
-            add_option( 'dt_genmapper_show_coaching', !empty( $_POST["dt_genmapper_show_coaching"] ) );
-        } else {
-            update_option( 'dt_genmapper_show_coaching', !empty( $_POST["dt_genmapper_show_coaching"] ) );
-        }
-
-        if ( get_option( 'dt_genmapper_show_generation' ) === false ) {
-            add_option( 'dt_genmapper_show_generation', !empty( $_POST["dt_genmapper_show_generation"] ) );
-        } else {
-            update_option( 'dt_genmapper_show_generation', !empty( $_POST["dt_genmapper_show_generation"] ) );
+        foreach ( self::CHECKBOX_OPTIONS as $option ) {
+            $checked = !empty( $_POST[ $option ] );
+            if ( get_option( $option ) === false ) {
+                add_option( $option, $checked );
+            } else {
+                update_option( $option, $checked );
+            }
         }
 
         $connection_display = ( isset( $_POST["dt_genmapper_connection_display"] ) && $_POST["dt_genmapper_connection_display"] === 'leaders' ) ? 'leaders' : 'coach';

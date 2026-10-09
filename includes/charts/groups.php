@@ -50,6 +50,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'show_icons' => get_option( "dt_genmapper_show_health_icons", true ),
                 'show_coaching' => get_option( "dt_genmapper_show_coaching", false ),
                 'show_generation' => get_option( "dt_genmapper_show_generation", false ),
+                'show_people_count' => get_option( "dt_genmapper_show_people_count", false ),
             ]
         );
 
@@ -74,6 +75,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'show_icons' => get_option( "dt_genmapper_show_health_icons", true ),
                 'show_coaching' => get_option( "dt_genmapper_show_coaching", false ),
                 'show_generation' => get_option( "dt_genmapper_show_generation", false ),
+                'show_people_count' => get_option( "dt_genmapper_show_people_count", false ),
             ]
         );
         wp_enqueue_script('dt_' . $this->slug . '_script', trailingslashit( plugin_dir_url( __FILE__ ) ) . $this->js_file_name, [
@@ -97,7 +99,9 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'spinner' => '<img src="' . trailingslashit( plugin_dir_url( __DIR__ ) ) . 'ajax-loader.gif" style="height:1em;" />',
                 'translation' => [
                     'string1' => __( 'Group Generation Tree', 'disciple-tools-genmapper' ),
-                    'string2' => __( 'This tree only shows First Generation groups that have multiplied.', 'disciple-tools-genmapper' ),
+                    'string2' => get_option( 'dt_genmapper_show_unmultiplied', false )
+                        ? __( 'This tree shows all groups. Groups without a parent group start a new tree.', 'disciple-tools-genmapper' )
+                        : __( 'This tree only shows First Generation groups that have multiplied.', 'disciple-tools-genmapper' ),
                     'string3' => __( 'See descendants of a specific group', 'disciple-tools-genmapper' ),
                     'string4' => __( 'Reset', 'disciple-tools-genmapper' ),
                     'coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
@@ -162,6 +166,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'legend_group' => $terms['other_types'],
                 'legend_inactive' => $terms['inactive'],
                 'legend_coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
+                'legend_people' => $group_fields['member_count']['name'] ?? __( 'Member Count', 'disciple-tools-genmapper' ),
                 'stat_groups' => $terms['groups'],
                 'stat_active' => $terms['active'],
                 'paper' => __( 'Paper', 'disciple-tools-genmapper' ),
@@ -216,7 +221,9 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 "name" => "source"
             ]
         ];
-        $groups = dt_genmapper_plugin_queries()->tree( 'multiplying_groups_only' );
+        $groups = dt_genmapper_plugin_queries()->tree( 'multiplying_groups_only', [
+            'include_unmultiplied' => (bool) get_option( 'dt_genmapper_show_unmultiplied', false ),
+        ] );
         if (is_wp_error( $groups )) {
             return $groups;
         }
@@ -274,6 +281,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 "location" => $location_display,
                 "start_date" => $group['start_date'] ? gmdate( get_option( 'date_format' ), strtotime( $group['start_date'] ) ) : null,
                 "attenders" => (int) $group['total_members'],
+                "people_count" => (int) $group['total_members'],
                 "believers" => (int) $group['total_believers'],
                 "baptized" => (int) $group['total_baptized'],
                 "newlyBaptized" => (int) $group['total_baptized_by_group'],
