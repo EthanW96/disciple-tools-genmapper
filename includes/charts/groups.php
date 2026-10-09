@@ -102,7 +102,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'current_user_id' => get_current_user_id(),
                 'spinner' => '<img src="' . trailingslashit( plugin_dir_url( __DIR__ ) ) . 'ajax-loader.gif" style="height:1em;" />',
                 'translation' => [
-                    'string1' => __( 'Group Generation Tree', 'disciple-tools-genmapper' ),
+                    'string1' => DT_Genmapper_Metrics::chart_label(), // chart label setting, e.g. "Egg Chart"
                     'string2' => get_option( 'dt_genmapper_show_unmultiplied', false )
                         ? __( 'This tree shows all groups. Groups without a parent group start a new tree.', 'disciple-tools-genmapper' )
                         : __( 'This tree only shows First Generation groups that have multiplied.', 'disciple-tools-genmapper' ),

@@ -47,7 +47,7 @@
     chartDiv.empty().html(`
       <div class="grid-x">
         <div class="cell medium-9">
-            <span class="section-header">${localizedObject.translation.string1 /*Group Generation Tree*/}</span>
+            <span class="section-header">${window.lodash.escape(localizedObject.translation.string1) /*chart label, e.g. Egg Chart*/}</span>
             ${localizedObject.translation.string2 /*This tree only show First Generation groups that have multiplied*/}
             ${coaching_legend()}
         </div>
