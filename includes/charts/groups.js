@@ -8,15 +8,37 @@
     }
   })
 
-  // Legend for the coached-group fill; only shown when the setting is on
+  const coachingGroupsEnabled = () => window.genApiTemplate.coaching_enabled === "1"
+    && window.GenMapperCoachingLayout && window.GenMapperCoachingShapes
+
+  // Legend for the coached-group fill and coaching groups; each only when its setting is on
   function coaching_legend() {
-    if (window.genApiTemplate.show_coaching !== "1") {
-      return ''
+    const coached = window.genApiTemplate.show_coaching === "1"
+      ? `<span class="coaching-legend__swatch coaching-legend__swatch--coached"></span>${window.lodash.escape(localizedObject.translation.coached)}
+        <span class="coaching-legend__swatch"></span>${window.lodash.escape(localizedObject.translation.not_coached)}`
+      : ''
+    const coachingGroups = coachingGroupsEnabled()
+      ? `<span class="coaching-legend__triangle"></span>${window.lodash.escape(localizedObject.translation.coaching_legend)}`
+      : ''
+    return coached || coachingGroups ? `<div class="coaching-legend">${coached}${coachingGroups}</div>` : ''
+  }
+
+  // Coaching groups: triangle slots in the layout, and shapes drawn behind the tree
+  function enable_coaching_groups(chart) {
+    if (!coachingGroupsEnabled()) {
+      return
     }
-    return `<div class="coaching-legend">
-      <span class="coaching-legend__swatch coaching-legend__swatch--coached"></span>${window.lodash.escape(localizedObject.translation.coached)}
-      <span class="coaching-legend__swatch"></span>${window.lodash.escape(localizedObject.translation.not_coached)}
-    </div>`
+    const shapes = window.GenMapperCoachingShapes
+    chart.decorateData = window.GenMapperCoachingLayout.decorate
+    chart.afterRedraw = (nodes, layer) => {
+      layer.html(shapes.markup(shapes.itemsFromNodes(nodes.descendants())))
+    }
+    chart.gShapes.on('click', () => {
+      const triangle = d3.event.target.closest('[data-record-id]')
+      if (triangle) {
+        window.open(`${wpApiShare.site_url}/groups/${encodeURIComponent(triangle.getAttribute('data-record-id'))}/`, '_blank')
+      }
+    })
   }
 
   function show_template_overview() {
@@ -70,6 +92,7 @@
     `)
 
     window.genmapper = new window.genMapperClass()
+    enable_coaching_groups(window.genmapper)
     get_groups()
 
     /**

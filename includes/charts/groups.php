@@ -80,11 +80,13 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'coaching_enabled' => DT_Genmapper_Metrics::coaching_group_type() !== '',
             ]
         );
+        $this->coaching_scripts();
         wp_enqueue_script('dt_' . $this->slug . '_script', trailingslashit( plugin_dir_url( __FILE__ ) ) . $this->js_file_name, [
             'jquery',
             'jquery-ui-core',
             'genmapper',
-            'wp-i18n'
+            'wp-i18n',
+            'genmapper-coaching-shapes',
         ], filemtime( plugin_dir_path( __FILE__ ) . $this->js_file_name ), true);
 
         $this->print_pack_scripts( $group_fields );
@@ -141,6 +143,17 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
     }
 
     /**
+     * Shared SVG text helpers and the coaching group layout/shapes (Groups chart only)
+     */
+    private function coaching_scripts() {
+        $url = trailingslashit( plugin_dir_url( __FILE__ ) );
+        $path = plugin_dir_path( __FILE__ );
+        wp_enqueue_script( 'genmapper-svg-text', $url . 'svg-text.js', [], filemtime( $path . 'svg-text.js' ), true );
+        wp_enqueue_script( 'genmapper-coaching-layout', $url . 'coaching/coaching-layout.js', [], filemtime( $path . 'coaching/coaching-layout.js' ), true );
+        wp_enqueue_script( 'genmapper-coaching-shapes', $url . 'coaching/coaching-shapes.js', [ 'genmapper-svg-text', 'genmapper-coaching-layout', 'gen-template' ], filemtime( $path . 'coaching/coaching-shapes.js' ), true );
+    }
+
+    /**
      * Print pack (one-page overview + a page per first-generation tree) for the Groups chart
      *
      * @param array $group_fields field settings for the groups post type
@@ -151,7 +164,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         $path = plugin_dir_path( __FILE__ ) . 'print-pack/';
 
         wp_enqueue_style( 'genmapper-print-pack', $dir . 'print-pack.css', [], filemtime( $path . 'print-pack.css' ) );
-        wp_enqueue_script( 'genmapper-print-pack-common', $dir . 'print-pack-common.js', [ 'genmapper' ], filemtime( $path . 'print-pack-common.js' ), true );
+        wp_enqueue_script( 'genmapper-print-pack-common', $dir . 'print-pack-common.js', [ 'genmapper', 'genmapper-svg-text', 'genmapper-coaching-shapes' ], filemtime( $path . 'print-pack-common.js' ), true );
         wp_enqueue_script( 'genmapper-print-pack-overview', $dir . 'print-pack-overview.js', [ 'genmapper-print-pack-common' ], filemtime( $path . 'print-pack-overview.js' ), true );
         wp_enqueue_script( 'genmapper-print-pack-tree-pages', $dir . 'print-pack-tree-pages.js', [ 'genmapper-print-pack-common', 'd3' ], filemtime( $path . 'print-pack-tree-pages.js' ), true );
         wp_enqueue_script( 'genmapper-print-pack', $dir . 'print-pack.js', [ 'genmapper-print-pack-overview', 'genmapper-print-pack-tree-pages', 'genmapper-poster' ], filemtime( $path . 'print-pack.js' ), true );
@@ -171,6 +184,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'legend_inactive' => $terms['inactive'],
                 'legend_coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
                 'legend_people' => $group_fields['member_count']['name'] ?? __( 'Member Count', 'disciple-tools-genmapper' ),
+                'coaching_type_label' => $this->coaching_type_label(),
                 'stat_groups' => $terms['groups'],
                 'stat_active' => $terms['active'],
                 'paper' => __( 'Paper', 'disciple-tools-genmapper' ),

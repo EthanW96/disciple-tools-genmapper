@@ -32,15 +32,45 @@
         return map;
     };
 
+    // Coaching triangle slots for the tree's first group live beside it, under the hidden root
+    const rootSpacers = (tree) => (tree.parent ? tree.parent.children : [])
+        .filter((node) => common.isSpacer(node) && node.data.component_root === String(tree.data.id));
+
     // Fresh hierarchy so the screen layout is never modified
     const layoutTree = (tree) => {
-        const copy = d3.hierarchy(tree, (node) => node.children);
+        const spacers = rootSpacers(tree);
+        const source = spacers.length ? { synthetic: true, children: spacers.concat(tree) } : tree;
+        const copy = d3.hierarchy(source, (node) => node.children);
         d3.tree().nodeSize([NODE_WIDTH, NODE_HEIGHT]).separation((a, b) => (a.parent === b.parent ? 1 : 1.15))(copy);
-        const nodes = copy.descendants();
+        const nodes = copy.descendants().filter((node) => !node.data.synthetic);
         const minX = Math.min(...nodes.map((node) => node.x)) - NODE_WIDTH / 2 - SIDE_SPACE / 2;
         const maxX = Math.max(...nodes.map((node) => node.x)) + NODE_WIDTH / 2;
+        const minY = Math.min(...nodes.map((node) => node.y));
         const maxY = Math.max(...nodes.map((node) => node.y));
-        return { copy, nodes, minX, width: maxX - minX, height: SPACE_ABOVE + maxY + SPACE_BELOW };
+        return { copy, nodes, minX, minY, width: maxX - minX, height: SPACE_ABOVE + (maxY - minY) + SPACE_BELOW };
+    };
+
+    const rowOf = (node) => node.data.data;
+    const isRealNode = (node) => !common.isSpacer(node.data);
+
+    // Coaching group shapes and triangles, sized to this page's tighter node spacing
+    const coachingMarkup = (layout, pageIndex) => {
+        if (!window.GenMapperCoachingShapes) {
+            return '';
+        }
+        const items = layout.nodes.map((node) => ({
+            row: rowOf(node),
+            x: node.x,
+            y: node.y,
+            parentId: node.parent && !node.parent.data.synthetic ? String(rowOf(node.parent).id) : '',
+        }));
+        return window.GenMapperCoachingShapes.markup(items, {
+            idPrefix: `pp-coaching-${pageIndex}`,
+            slotWidth: NODE_WIDTH,
+            sideGap: (NODE_WIDTH - TEXT_WIDTH) / 2,
+            above: SPACE_ABOVE - 6,
+            below: SPACE_BELOW - 4,
+        });
     };
 
     const fitScale = (layout, page) => {
@@ -83,20 +113,20 @@
 
     const locationOf = (tree) => tree.data.location || '';
 
-    const buildPage = (tree, page, liveNodes) => {
+    const buildPage = (tree, page, liveNodes, pageIndex) => {
         const t = common.strings();
         const layout = layoutTree(tree);
         const scale = fitScale(layout, page);
         const box = common.contentBox(page);
         const offsetX = box.x + (box.w - layout.width * scale) / 2 - layout.minX * scale;
-        const offsetY = box.y + SPACE_ABOVE * scale;
+        const offsetY = box.y + (SPACE_ABOVE - layout.minY) * scale;
         const summary = common.summarize([tree]);
         const subtitle = [locationOf(tree), tree.data.coach].filter(Boolean).join('  ·  ');
         const header = common.headerMarkup(page, `${t.chart_label} — ${tree.data.name}`, subtitle, summary);
-        const links = layout.nodes.slice(1).map(linkMarkup).join('');
-        const nodes = layout.nodes.map((node) => nodeMarkup(node, liveNodes)).join('');
+        const links = layout.nodes.filter((node) => node.parent && !node.parent.data.synthetic && isRealNode(node)).map(linkMarkup).join('');
+        const nodes = layout.nodes.filter(isRealNode).map((node) => nodeMarkup(node, liveNodes)).join('');
         return {
-            markup: `${header}<g transform="translate(${offsetX},${offsetY}) scale(${scale})">${links}${nodes}</g>`,
+            markup: `${header}<g transform="translate(${offsetX},${offsetY}) scale(${scale})">${coachingMarkup(layout, pageIndex)}${links}${nodes}</g>`,
             name: tree.data.name,
             fontSize: NAME_SIZE * scale,
         };
@@ -104,7 +134,7 @@
 
     const build = (trees, page) => {
         const liveNodes = liveNodesById();
-        return trees.map((tree) => buildPage(tree, page, liveNodes));
+        return trees.map((tree, index) => buildPage(tree, page, liveNodes, index));
     };
 
     // Name size (pt) each tree page would print at, without building it

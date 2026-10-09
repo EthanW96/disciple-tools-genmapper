@@ -32,6 +32,9 @@ class GenMapper {
       .on('dblclick.zoom', null)
     this.g = this.svg.append('g')
       .attr('id', 'maingroup')
+    // Optional drawings behind links and nodes (e.g. coaching group shapes), filled by afterRedraw
+    this.gShapes = this.g.append('g')
+      .attr('class', 'group-shapes')
     this.gLinks = this.g.append('g')
       .attr('class', 'group-links')
     this.gLinksText = this.g.append('g')
@@ -253,7 +256,9 @@ class GenMapper {
           return a.parent === b.parent ? 1 : 1.3
         })
 
-    const stratifiedData = d3.stratify()(this.data)
+    // A chart may add layout-only rows (e.g. coaching triangle slots) without changing this.data
+    const layoutData = typeof this.decorateData === 'function' ? this.decorateData(this.data) : this.data
+    const stratifiedData = d3.stratify()(layoutData)
     this.nodes = tree(stratifiedData)
     // update the links between the nodes
     const link = this.gLinks.selectAll('.link')
@@ -266,7 +271,8 @@ class GenMapper {
         .append('path')
       .merge(link)
           .attr('class', function (d) {
-            return (d.parent.id == 0)? 'link-dummy' : 'link'   // #customtft dummy root node
+            // #customtft dummy root node; layout-only slots (e.g. coaching triangles) get no link either
+            return (d.parent.id == 0 || d.data.spacer) ? 'link-dummy' : 'link'
           })
           .attr('d', function (d) {
             return 'M' + d.x + ',' + d.y +
@@ -339,6 +345,9 @@ class GenMapper {
           classes.push('node--dummyroot')
         }
         classes.push(d.data.active ? 'node--active' : 'node--inactive')
+        if (d.data.node_class) {
+          classes.push(d.data.node_class)
+        }
         if (this.showCoaching && d.data.coached) {
           classes.push('node--coached')
         }
@@ -386,6 +395,9 @@ class GenMapper {
         return 'translate(' + d.x + ',' + d.y + ')'
       })
       .on('click', (d) => {
+        if (d.data.spacer) {
+          return
+        }
         this.popupEditGroupModal(d) }
       )
 
@@ -423,6 +435,10 @@ class GenMapper {
         this.updateFieldWithInherit(field, element)
       }
     })
+
+    if (typeof this.afterRedraw === 'function') {
+      this.afterRedraw(this.nodes, this.gShapes)
+    }
   }
 
   updateFieldWithInherit (field, element) {

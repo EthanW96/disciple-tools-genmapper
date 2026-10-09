@@ -13,8 +13,7 @@
     const MARGIN_PT = 22; // ~8mm, inside most printers' printable area
     const HEADER_PT = 46;
     const MIN_FONT_PT = 6;
-    const FONT_FAMILY = 'Helvetica, Arial, sans-serif';
-    const ELLIPSIS = '…';
+    const { FONT_FAMILY, escapeText, measure, fitText } = window.GenMapperSvgText;
 
     const strings = () => (window.genPrintPack && window.genPrintPack.translations) || {};
 
@@ -30,46 +29,28 @@
         h: page.h - MARGIN_PT * 2 - HEADER_PT,
     });
 
-    const escapeText = (text) => String(text == null ? '' : text)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-    const measureContext = document.createElement('canvas').getContext('2d');
-    const measure = (text, fontSize, weight = 400) => {
-        measureContext.font = `${weight} ${fontSize}px ${FONT_FAMILY}`;
-        return measureContext.measureText(String(text || '')).width;
+    // Coaching triangles take hidden "spacer" slots in the tree; these helpers skip them
+    const isSpacer = (node) => Boolean(node.data && node.data.spacer);
+    const realChildren = (node) => (node.children || []).filter((child) => !isSpacer(child));
+    const realDescendants = (node) => [node].concat(realChildren(node).flatMap(realDescendants));
+    const realLeafCount = (node) => {
+        const children = realChildren(node);
+        return children.length ? children.reduce((total, child) => total + realLeafCount(child), 0) : 1;
     };
-
-    // Cut text with "…" so it fits maxWidth (same units as fontSize)
-    const fitText = (text, maxWidth, fontSize, weight = 400) => {
-        const value = String(text || '');
-        if (measure(value, fontSize, weight) <= maxWidth) {
-            return value;
-        }
-        let low = 0;
-        let high = value.length;
-        while (low < high) {
-            const mid = Math.ceil((low + high) / 2);
-            if (measure(value.slice(0, mid) + ELLIPSIS, fontSize, weight) <= maxWidth) {
-                low = mid;
-            } else {
-                high = mid - 1;
-            }
-        }
-        return low > 0 ? value.slice(0, low).trimEnd() + ELLIPSIS : '';
-    };
+    const realHeight = (node) => Math.max(0, ...realChildren(node).map((child) => realHeight(child) + 1));
 
     // The first-generation trees currently on screen (all trees, or the one group being viewed)
     const firstGenerationTrees = (root) => {
         if (!root) {
             return [];
         }
-        return root.data && root.data.id === 0 ? (root.children || []) : [root];
+        return root.data && root.data.id === 0 ? realChildren(root) : [root];
     };
 
     const generationOf = (node) => Number(node.data.generation) || node.depth || 1;
 
     const summarize = (trees) => {
-        const nodes = trees.flatMap((tree) => tree.descendants());
+        const nodes = trees.flatMap(realDescendants);
         const byGeneration = {};
         nodes.forEach((node) => {
             const generation = generationOf(node);
@@ -249,6 +230,11 @@ ${pagesMarkup.map((markup) => `<section class="pp-page"><svg xmlns="http://www.w
         fitText,
         firstGenerationTrees,
         generationOf,
+        isSpacer,
+        realChildren,
+        realDescendants,
+        realLeafCount,
+        realHeight,
         showHealth,
         showPeopleCount,
         peopleIcon,
