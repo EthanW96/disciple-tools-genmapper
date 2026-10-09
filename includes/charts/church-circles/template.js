@@ -10,7 +10,7 @@ const countNumberLeft = boxHeight * -0.55;
 const countSpacing = boxHeight / 2.8;
 const NODE_WIDTH = boxHeight * 4;
 const NODE_HEIGHT = boxHeight * 3.25;
-const LINE_WIDTH = NODE_WIDTH - 20;
+const LINE_WIDTH = NODE_WIDTH - 60; // leaves padding inside coaching group outlines
 
 const icons = window.genApiTemplate.icons;
 let group_fields = window.genApiTemplate.group_fields;

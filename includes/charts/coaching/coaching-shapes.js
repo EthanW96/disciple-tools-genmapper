@@ -14,7 +14,12 @@
         slotWidth: SLOT_WIDTH,
         sideGap: 14, // keeps neighbouring shapes apart (half the gap between siblings)
         above: 46, // metric icons and people count sit above the circle
-        below: CIRCLE + LINE_HEIGHT * 4 + 8, // circle plus four text lines
+        below: CIRCLE + LINE_HEIGHT * 4 + 16, // circle plus four text lines, with room below the last line
+        // Triangle labels: name and members (the coaches) under the triangle
+        nameSize: 15,
+        membersSize: 13,
+        nameY: CIRCLE + 16,
+        membersY: CIRCLE + 34,
     };
     const CORRIDOR = 50; // width of the band joining a group to its coached child (narrow enough to clear neighbouring trees)
     const RING = 4; // outline thickness
@@ -22,8 +27,6 @@
     const NEST_STEP = RING + 5;
     const TINT_OPACITY = 0.16;
     const TRIANGLE_HALF_WIDTH = 46;
-    const NAME_SIZE = 15;
-    const MEMBERS_SIZE = 13;
 
     const pieceBox = (point, geometry, inset) => {
         const half = geometry.slotWidth / 2 - geometry.sideGap - inset;
@@ -67,19 +70,20 @@
 
     const triangle = (point, group, geometry) => {
         const textWidth = geometry.slotWidth - 2 * geometry.sideGap - 10;
-        const name = text.fitText(group.name, textWidth, NAME_SIZE, 700);
-        const members = text.fitText(group.members, textWidth, MEMBERS_SIZE);
+        const name = text.fitText(group.name, textWidth, geometry.nameSize, 700);
+        const members = text.fitText(group.members, textWidth, geometry.membersSize);
         return `<g class="coaching-triangle" data-record-id="${text.escapeText(group.id)}" transform="translate(${point.x},${point.y})">
             <title>${text.escapeText(group.name)}${group.members ? ` — ${text.escapeText(group.members)}` : ''}</title>
             <polygon points="0,2 ${TRIANGLE_HALF_WIDTH},${CIRCLE - 2} ${-TRIANGLE_HALF_WIDTH},${CIRCLE - 2}" fill="${group.color}" fill-opacity=".85" stroke="${group.color}" stroke-width="3" stroke-linejoin="round"/>
-            <text y="${CIRCLE + 16}" text-anchor="middle" style="font:700 ${NAME_SIZE}px ${text.FONT_FAMILY};fill:#000;stroke:none">${text.escapeText(name)}</text>
-            <text y="${CIRCLE + 34}" text-anchor="middle" style="font:400 ${MEMBERS_SIZE}px ${text.FONT_FAMILY};fill:#444;stroke:none">${text.escapeText(members)}</text>
+            <text y="${geometry.nameY}" text-anchor="middle" style="font:700 ${geometry.nameSize}px ${text.FONT_FAMILY};fill:#000;stroke:none">${text.escapeText(name)}</text>
+            <text y="${geometry.membersY}" text-anchor="middle" style="font:400 ${geometry.membersSize}px ${text.FONT_FAMILY};fill:#444;stroke:none">${text.escapeText(members)}</text>
         </g>`;
     };
 
     /**
      * @param {Array} items laid-out nodes: { row, x, y, parentId } (row = the node's data)
-     * @param {Object} options idPrefix (unique per drawing on a page), slotWidth, sideGap, above, below
+     * @param {Object} options idPrefix (unique per drawing on a page), slotWidth, sideGap, above, below,
+     *                         nameSize, membersSize, nameY, membersY (triangle labels)
      * @returns {string} SVG markup: tints, then outlines, then triangles
      */
     const markup = (items, options = {}) => {

@@ -7,14 +7,16 @@
     const common = window.GenMapperPrintCommon;
 
     const CIRCLE = typeof boxHeight !== 'undefined' ? boxHeight : 80; // from church-circles/template.js
-    const NODE_WIDTH = 190;
+    const NODE_WIDTH = 210;
     const NODE_HEIGHT = 205;
     const NAME_SIZE = 13;
     const LEADER_SIZE = 11;
     const NAME_WEIGHT = 700;
-    const TEXT_WIDTH = NODE_WIDTH - 12;
+    const TEXT_WIDTH = NODE_WIDTH - 44; // leaves padding inside coaching group outlines
     const SPACE_ABOVE = 45; // metric icons sit above the circle
-    const SPACE_BELOW = CIRCLE + 36; // circle plus name and leader lines
+    const NAME_Y = CIRCLE + 16;
+    const LEADER_Y = CIRCLE + 31;
+    const SPACE_BELOW = LEADER_Y + 22; // leader line plus room below it, also inside nested coaching outlines
     const SIDE_SPACE = 60; // Gen label on the left of the circle
     const MAX_SCALE = 1.2;
     const LIVE_NODE_SELECTOR = '#genmapper-graph-svg .node';
@@ -67,9 +69,14 @@
         return window.GenMapperCoachingShapes.markup(items, {
             idPrefix: `pp-coaching-${pageIndex}`,
             slotWidth: NODE_WIDTH,
-            sideGap: (NODE_WIDTH - TEXT_WIDTH) / 2,
-            above: SPACE_ABOVE - 6,
-            below: SPACE_BELOW - 4,
+            sideGap: 7, // outlines stay wider than the text, with a small gap to neighbouring groups
+            above: SPACE_ABOVE,
+            below: SPACE_BELOW,
+            // Triangle labels match the group labels on this page
+            nameSize: NAME_SIZE,
+            membersSize: LEADER_SIZE,
+            nameY: NAME_Y,
+            membersY: LEADER_Y,
         });
     };
 
@@ -99,8 +106,8 @@
         const nameColor = group.active ? '#000' : '#888';
         const classes = live ? live.getAttribute('class') : 'node';
         return `<g class="${classes}" transform="translate(${node.x},${node.y})">${inner}`
-            + textMarkup(group.name, CIRCLE + 16, NAME_SIZE, NAME_WEIGHT, nameColor)
-            + textMarkup(group.coach, CIRCLE + 31, LEADER_SIZE, 400, '#555')
+            + textMarkup(group.name, NAME_Y, NAME_SIZE, NAME_WEIGHT, nameColor)
+            + textMarkup(group.coach, LEADER_Y, LEADER_SIZE, 400, '#555')
             + '</g>';
     };
 
