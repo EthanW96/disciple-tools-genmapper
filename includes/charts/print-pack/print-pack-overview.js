@@ -68,32 +68,13 @@
         return text ? size * (PEOPLE_GAP_RATIO * 2 + PEOPLE_ICON_RATIO) + common.measure(text, size) : 0;
     };
 
-    // Coaching groups: a small triangle in the coaching group's colour after the name, one per coaching group
-    const MARKER_RATIO = 0.8;
-    const MARKER_GAP_RATIO = 0.25;
-    const KEY_LINE_PT = 12;
-    const KEY_FONT_PT = 7;
-    const coachingOf = (node) => (Array.isArray(node.data.coaching) ? node.data.coaching : []);
-    const markersWidthAt = (node, size) => coachingOf(node).length * size * (MARKER_RATIO + MARKER_GAP_RATIO);
-
-    const coachingColors = (trees) => (window.GenMapperCoachingLayout
-        ? window.GenMapperCoachingLayout.coachingGroups(trees.flatMap(common.realDescendants).map((node) => node.data))
-        : []);
-
-    const markerShape = (x, baseline, size, color) => {
-        const height = size * MARKER_RATIO;
-        return `<polygon points="${x + height / 2},${baseline - height} ${x + height},${baseline} ${x},${baseline}" fill="${color}"/>`;
-    };
-
-    // Size for the longest name (plus people count and coaching markers) so no group name gets cut off
+    // Size for the longest name (plus its people count) so no group name gets cut off
     const widestNameAt1pt = (trees) => Math.max(1, ...trees.flatMap(common.realDescendants)
-        .map((node) => common.measure(node.data.name, 1, NAME_WEIGHT) + peopleWidthAt(node, 1) + markersWidthAt(node, 1)));
+        .map((node) => common.measure(node.data.name, 1, NAME_WEIGHT) + peopleWidthAt(node, 1)));
 
     // Try 1..3 tree columns and keep the arrangement that gives the biggest names
     const planLayout = (trees, page) => {
-        const fullBox = common.contentBox(page);
-        const keyLine = coachingColors(trees).length ? KEY_LINE_PT : 0;
-        const box = { ...fullBox, y: fullBox.y + keyLine, h: fullBox.h - keyLine };
+        const box = common.contentBox(page);
         const generations = Math.max(1, ...trees.map((tree) => common.realHeight(tree) + 1));
         const nameWidth = widestNameAt1pt(trees);
         const withHealth = common.showHealth();
@@ -111,7 +92,7 @@
             const fontByWidth = widthAtZero / (nameWidth + shrinkPerPt);
             const fontSize = Math.min(MAX_NAME_PT, fontByHeight, fontByWidth);
             if (!best || fontSize > best.fontSize) {
-                best = { columns, columnWidth, genWidth, rowHeight, fontSize, generations, box, withHealth, colors: new Map(coachingColors(trees).map((group) => [String(group.id), group.color])) };
+                best = { columns, columnWidth, genWidth, rowHeight, fontSize, generations, box, withHealth };
             }
         }
         return best;
@@ -139,8 +120,8 @@
         const nameSize = layout.fontSize;
         const cell = cellGeometry(nameSize, layout.genWidth, layout.withHealth);
         const textX = x + cell.textLeft;
-        const extrasWidth = peopleWidthAt(node, nameSize) + markersWidthAt(node, nameSize);
-        const name = common.fitText(node.data.name, cell.textWidth - extrasWidth, nameSize, NAME_WEIGHT);
+        const peopleWidth = peopleWidthAt(node, nameSize);
+        const name = common.fitText(node.data.name, cell.textWidth - peopleWidth, nameSize, NAME_WEIGHT);
         const nameEnd = textX + common.measure(name, nameSize, NAME_WEIGHT);
         const leader = common.fitText(node.data.coach, cell.textWidth, cell.leaderSize);
         const inactive = node.data.active ? '' : ' pp-inactive';
@@ -151,41 +132,7 @@
             + `<text x="${textX}" y="${y - NAME_BASELINE_GAP_PT}" class="pp-name${inactive}" style="font-size:${nameSize}px">${common.escapeText(name)}</text>`
             + (leader ? `<text x="${textX}" y="${y + LEADER_GAP_PT + cell.leaderSize * NAME_ASCENT}" class="pp-leader" style="font-size:${cell.leaderSize}px">${common.escapeText(leader)}</text>` : '')
             + peopleMarkup(node, nameEnd, y, nameSize)
-            + markersMarkup(node, nameEnd + peopleWidthAt(node, nameSize), y, nameSize, layout.colors)
             + health;
-    };
-
-    const markersMarkup = (node, x, y, size, colors) => coachingOf(node).map((group, index) => markerShape(
-        x + size * MARKER_GAP_RATIO + index * size * (MARKER_RATIO + MARKER_GAP_RATIO),
-        y - NAME_BASELINE_GAP_PT,
-        size,
-        colors.get(String(group.id)) || '#555'
-    )).join('');
-
-    // One line under the header naming each coaching group next to its colour
-    const coachingKey = (trees, layout) => {
-        const groups = coachingColors(trees);
-        if (!groups.length) {
-            return '';
-        }
-        const t = common.strings();
-        const y = layout.box.y - KEY_LINE_PT + KEY_FONT_PT + 1;
-        const right = layout.box.x + layout.box.w;
-        let cursor = layout.box.x;
-        const label = `${t.coaching_type_label || ''}:`;
-        let markup = `<text x="${cursor}" y="${y}" class="pp-key">${common.escapeText(label)}</text>`;
-        cursor += common.measure(label, KEY_FONT_PT) + 6;
-        for (const group of groups) {
-            const width = KEY_FONT_PT + 3 + common.measure(group.name, KEY_FONT_PT) + 10;
-            if (cursor + width > right) {
-                markup += `<text x="${cursor}" y="${y}" class="pp-key">…</text>`;
-                break;
-            }
-            markup += markerShape(cursor, y, KEY_FONT_PT * 1.1, group.color)
-                + `<text x="${cursor + KEY_FONT_PT + 3}" y="${y}" class="pp-key">${common.escapeText(group.name)}</text>`;
-            cursor += width;
-        }
-        return markup;
     };
 
     const peopleMarkup = (node, x, y, size) => {
@@ -255,7 +202,6 @@
         .pp-overview .pp-gen { font: 700 8px Helvetica, Arial, sans-serif; fill: #777; }
         .pp-overview .pp-connector { fill: none; stroke: #bbb; stroke-width: .6; }
         .pp-overview .pp-health.pp-inactive { opacity: .5; }
-        .pp-key { font: 400 7px Helvetica, Arial, sans-serif; fill: #333; }
     `;
 
     // Returns { markup, fontSize } for the overview page, or null when there is nothing to draw
@@ -274,7 +220,7 @@
             return markup;
         }).join('');
         return {
-            markup: `<style>${OVERVIEW_CSS}</style>${header}${coachingKey(trees, layout)}<g class="pp-overview">${columns}</g>`,
+            markup: `<style>${OVERVIEW_CSS}</style>${header}<g class="pp-overview">${columns}</g>`,
             fontSize: layout.fontSize,
         };
     };

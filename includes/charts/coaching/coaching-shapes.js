@@ -16,7 +16,7 @@
         above: 46, // metric icons and people count sit above the circle
         below: CIRCLE + LINE_HEIGHT * 4 + 8, // circle plus four text lines
     };
-    const CORRIDOR = 70; // width of the band joining a group to its coached child
+    const CORRIDOR = 50; // width of the band joining a group to its coached child (narrow enough to clear neighbouring trees)
     const RING = 4; // outline thickness
     const TINT_OPACITY = 0.16;
     const TRIANGLE_HALF_WIDTH = 46;

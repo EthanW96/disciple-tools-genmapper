@@ -106,6 +106,8 @@
 
     const LEGEND_FONT_PT = 7.5;
     const LEGEND_MIN_FONT_PT = 6;
+    const LEGEND_GAP_PT = 10;
+    const LEGEND_MIN_GAP_PT = 4;
 
     // Circle key (church / group / inactive / coached) then the health icon key, on one line
     const legendMarkup = (x, y, width) => {
@@ -126,18 +128,31 @@
         const people = showPeopleCount() && peopleIcon() ? [{ icon: peopleIcon(), label: t.legend_people }] : [];
         const icons = people.concat(showHealth() ? healthIcons() : []);
         const markerWidth = 11;
-        const itemGap = 10;
         const labels = circles.map((item) => item.label).concat(icons.map((item) => item.label));
-        const widthAt = (size) => labels.reduce((total, label) => total + markerWidth + measure(label, size) + itemGap, 0);
-        const size = Math.max(LEGEND_MIN_FONT_PT, Math.min(LEGEND_FONT_PT, LEGEND_FONT_PT * width / widthAt(LEGEND_FONT_PT)));
+        const widthAt = (size, gap) => labels.reduce((total, text) => total + markerWidth + measure(text, size) + gap, 0);
+        // Shrink the text first, then the gaps; anything still too long is cut off with "…" below
+        const size = Math.max(LEGEND_MIN_FONT_PT, Math.min(LEGEND_FONT_PT, LEGEND_FONT_PT * width / widthAt(LEGEND_FONT_PT, LEGEND_GAP_PT)));
+        const spare = width - widthAt(size, 0);
+        const gap = Math.max(LEGEND_MIN_GAP_PT, Math.min(LEGEND_GAP_PT, spare / Math.max(1, labels.length)));
+        const right = x + width;
         let cursor = x;
-        const label = (text) => {
-            const markup = `<text x="${cursor + markerWidth}" y="${y}" class="pp-small" style="font-size:${size}px">${escapeText(text)}</text>`;
-            cursor += markerWidth + measure(text, size) + itemGap;
+        let full = false;
+        // Marker + label, or "…" once the line is full
+        const item = (marker, text) => {
+            if (full) {
+                return '';
+            }
+            const fits = cursor + markerWidth + measure(text, size) <= right;
+            if (!fits) {
+                full = true;
+                return `<text x="${cursor}" y="${y}" class="pp-small" style="font-size:${size}px">…</text>`;
+            }
+            const markup = marker(cursor) + `<text x="${cursor + markerWidth}" y="${y}" class="pp-small" style="font-size:${size}px">${escapeText(text)}</text>`;
+            cursor += markerWidth + measure(text, size) + gap;
             return markup;
         };
-        const circleItems = circles.map((item) => circleMarkup(item.data, cursor + 4, y - 3, 3.5) + label(item.label)).join('');
-        const iconItems = icons.map((item) => `<image href="${escapeText(item.icon)}" x="${cursor}" y="${y - 7.5}" width="9" height="9"/>` + label(item.label)).join('');
+        const circleItems = circles.map((entry) => item((at) => circleMarkup(entry.data, at + 4, y - 3, 3.5), entry.label)).join('');
+        const iconItems = icons.map((entry) => item((at) => `<image href="${escapeText(entry.icon)}" x="${at}" y="${y - 7.5}" width="9" height="9"/>`, entry.label)).join('');
         return circleItems + iconItems;
     };
 

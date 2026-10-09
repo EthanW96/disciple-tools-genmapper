@@ -184,7 +184,6 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'legend_inactive' => $terms['inactive'],
                 'legend_coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
                 'legend_people' => $group_fields['member_count']['name'] ?? __( 'Member Count', 'disciple-tools-genmapper' ),
-                'coaching_type_label' => $this->coaching_type_label(),
                 'stat_groups' => $terms['groups'],
                 'stat_active' => $terms['active'],
                 'paper' => __( 'Paper', 'disciple-tools-genmapper' ),
