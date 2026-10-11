@@ -132,6 +132,19 @@
                     </tr>
                     <tr>
                         <td>
+                            <label for="genmapper-show-timeline-tile">
+                                <b><?php esc_html_e( 'Show timeline on group records?', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="dt_genmapper_show_timeline_tile" <?php if ($show_timeline_tile): ?>checked<?php endif; ?> id="genmapper-show-timeline-tile">
+                            <p>
+                                <?php esc_html_e( 'Adds a Timeline tile to each group record: when it started, became an ecclesia, and its baptisms, coaching, child groups and health practices along the way. The full timelines are under Metrics.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             <label for="genmapper-coaching-group-type">
                                 <b><?php esc_html_e( 'Coaching groups', 'disciple-tools-genmapper' )?></b>
                             </label>

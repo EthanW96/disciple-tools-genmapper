@@ -23,6 +23,7 @@ class DT_Genmapper_Tab_General
         'dt_genmapper_show_generation',
         'dt_genmapper_show_people_count',
         'dt_genmapper_show_unmultiplied',
+        'dt_genmapper_show_timeline_tile',
     ];
 
 
@@ -50,6 +51,7 @@ class DT_Genmapper_Tab_General
         $show_generation = get_option( 'dt_genmapper_show_generation', false );
         $show_people_count = get_option( 'dt_genmapper_show_people_count', false );
         $show_unmultiplied = get_option( 'dt_genmapper_show_unmultiplied', false );
+        $show_timeline_tile = get_option( 'dt_genmapper_show_timeline_tile', false );
         $connection_display = get_option( 'dt_genmapper_connection_display', 'coach' );
         $coaching_group_type = DT_Genmapper_Metrics::coaching_group_type();
         $group_type_options = DT_Genmapper_Metrics::group_type_options();

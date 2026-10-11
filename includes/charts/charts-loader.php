@@ -18,9 +18,12 @@ class DT_Genmapper_Metrics_Charts
         require_once( 'charts-base.php' );
         require_once( 'groups.php' );
         require_once( 'baptisms.php' );
+        require_once( 'timeline/timeline-queries.php' );
+        require_once( 'timeline/timeline.php' );
 
         new DT_Genmapper_Groups_Chart();
         new DT_Genmapper_Baptisms_Chart();
+        new DT_Genmapper_Timeline_Chart();
     } // End __construct
 }
 DT_Genmapper_Metrics_Charts::instance();

@@ -1,0 +1,84 @@
+/* Group timelines. Colours validated with the dataviz palette checker:
+   stages = one blue ramp in order (pre-group → group → ecclesia),
+   events = orange / violet / aqua, each with its own shape. */
+.gm-tl {
+    --gm-tl-surface: #fcfcfb;
+    --gm-tl-ink: #0b0b0b;
+    --gm-tl-ink-2: #52514e;
+    --gm-tl-muted: #898781;
+    --gm-tl-grid: #e1e0d9;
+    --gm-tl-axis: #c3c2b7;
+    --gm-tl-pre: #86b6ef;
+    --gm-tl-group: #3987e5;
+    --gm-tl-ecclesia: #184f95;
+    --gm-tl-baptism: #eb6834;
+    --gm-tl-coach: #4a3aa7;
+    --gm-tl-multiplied: #1baf7a;
+    position: relative;
+    color: var(--gm-tl-ink);
+}
+
+.gm-tl-view { position: relative; }
+.gm-tl-section { margin-top: 24px; }
+.gm-tl-section h3 { margin: 0; font-size: 16px; }
+.gm-tl-caption, .gm-tl-quality, .gm-tl-note { margin: 2px 0 8px; font-size: 13px; color: var(--gm-tl-ink-2); }
+.gm-tl-error { color: #a33; }
+
+.gm-tl-filters { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin: 12px 0 4px; }
+.gm-tl-filters label { margin: 0; font-size: 13px; }
+.gm-tl-filters select { margin: 0; min-width: 160px; }
+.gm-tl-check { display: inline-flex; align-items: center; gap: 6px; }
+.gm-tl-check input { margin: 0; }
+
+.gm-tl-legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 6px 0; font-size: 12px; color: var(--gm-tl-ink-2); }
+.gm-tl-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.gm-tl-swatch { display: inline-block; width: 18px; height: 10px; border-radius: 2px; }
+.gm-tl-swatch.gm-tl-pre { background: var(--gm-tl-pre); }
+.gm-tl-swatch.gm-tl-group { background: var(--gm-tl-group); }
+.gm-tl-swatch.gm-tl-ecclesia { background: var(--gm-tl-ecclesia); }
+
+.gm-tl-svg { display: block; overflow: visible; }
+.gm-tl-svg text { font-size: 11px; fill: var(--gm-tl-muted); }
+.gm-tl-svg .gm-tl-label { fill: var(--gm-tl-ink-2); font-size: 12px; }
+.gm-tl-svg .gm-tl-label--strong { fill: var(--gm-tl-ink); font-weight: 600; }
+.gm-tl-svg .gm-tl-row-label { fill: var(--gm-tl-ink); font-size: 12px; }
+.gm-tl-grid { stroke: var(--gm-tl-grid); stroke-width: 1; }
+.gm-tl-axis { stroke: var(--gm-tl-axis); stroke-width: 1; }
+
+rect.gm-tl-pre, path.gm-tl-pre { fill: var(--gm-tl-pre); }
+rect.gm-tl-group, path.gm-tl-group { fill: var(--gm-tl-group); }
+rect.gm-tl-ecclesia, path.gm-tl-ecclesia { fill: var(--gm-tl-ecclesia); }
+.gm-tl-area { stroke: var(--gm-tl-surface); stroke-width: 1; }
+
+.gm-tl-ev { stroke: var(--gm-tl-surface); stroke-width: 2; }
+.gm-tl-ev--baptism { fill: var(--gm-tl-baptism); }
+.gm-tl-ev--coach { fill: var(--gm-tl-coach); }
+.gm-tl-ev--multiplied { fill: var(--gm-tl-multiplied); }
+.gm-tl-ev--health { stroke: var(--gm-tl-ink-2); stroke-width: 2; }
+.gm-tl-created { fill: var(--gm-tl-surface); stroke: var(--gm-tl-ink-2); stroke-width: 1.5; }
+.gm-tl-milestone, .gm-tl-median { stroke: var(--gm-tl-ink); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.gm-tl-median { stroke: var(--gm-tl-ink-2); }
+.gm-tl-curve { fill: none; stroke: var(--gm-tl-group); stroke-width: 2; stroke-linejoin: round; }
+.gm-tl-censor { stroke: var(--gm-tl-ink-2); stroke-width: 1.5; }
+.gm-tl-crosshair { stroke: var(--gm-tl-ink-2); stroke-width: 1; opacity: 0; }
+.gm-tl-hit { fill: transparent; }
+
+.gm-tl-row { cursor: pointer; outline: none; }
+.gm-tl-row-bg { fill: transparent; }
+.gm-tl-row:hover .gm-tl-row-bg, .gm-tl-row:focus .gm-tl-row-bg { fill: #f0efec; }
+
+.gm-tl-tip {
+    position: absolute; z-index: 5; display: none; max-width: 260px; padding: 6px 9px; pointer-events: none;
+    background: #fff; border: 1px solid rgba(11, 11, 11, .12); border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    font-size: 12px; line-height: 1.4; color: var(--gm-tl-ink);
+}
+
+.gm-tl-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 6px 0 10px; }
+.gm-tl-tile { padding: 10px 12px; background: #f4f4f1; border-radius: 6px; }
+.gm-tl-tile small { display: block; font-size: 12px; color: var(--gm-tl-ink-2); }
+.gm-tl-tile b { font-size: 22px; font-weight: 600; }
+.gm-tl-tile b span { font-size: 13px; font-weight: 400; color: var(--gm-tl-ink-2); }
+
+.gm-tl-table { margin-top: 20px; }
+.gm-tl-table table { width: 100%; font-size: 13px; }
+.gm-tl-table th { text-align: left; }
