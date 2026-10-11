@@ -13,13 +13,15 @@
     const AXIS = { top: 34, bottom: 160 };
     const SAME_DAY_GAP = 7 * DAY; // "entered in D.T." only shown when it differs from the start by more than this
 
-    const render = (container, group, stage, strings, now) => {
+    // options.minWidth: narrowest drawing width (the record tile is narrower than the Metrics page)
+    const render = (container, group, stage, strings, now, options = {}) => {
         container.innerHTML = '';
         if (!stage.start) {
             container.insertAdjacentHTML('beforeend', `<p class="gm-tl-note">${S.escape(strings.no_start_date)}</p>`);
             return;
         }
-        const width = Math.max(MIN_WIDTH, container.clientWidth || MIN_WIDTH);
+        const minWidth = options.minWidth || MIN_WIDTH;
+        const width = Math.max(minWidth, container.clientWidth || minWidth);
         const until = Math.min(stage.end || now, now);
         const eventTimes = (group.events || []).filter((event) => LANES[event.kind]).map((event) => event.time);
         const from = Math.min(stage.start, group.created || stage.start) - 15 * DAY;

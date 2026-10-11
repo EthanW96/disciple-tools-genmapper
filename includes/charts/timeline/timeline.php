@@ -137,9 +137,12 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             'swimlanes' => __( 'Swimlanes', 'disciple-tools-genmapper' ),
             'swimlanes_caption' => __( 'One row per group, parents before their child groups. Hover for details; click a row for its journey.', 'disciple-tools-genmapper' ),
             'swimlanes_label' => __( 'Swimlane chart of groups with their stages and events over time', 'disciple-tools-genmapper' ),
-            'time_to_ecclesia' => __( 'Time from start to ecclesia', 'disciple-tools-genmapper' ),
-            'time_to_ecclesia_caption' => __( 'Share of groups that have become an ecclesia, by months since they started. Groups that have not yet still count until today (ticks).', 'disciple-tools-genmapper' ),
-            'time_to_ecclesia_label' => __( 'Step curve of the share of groups that have become an ecclesia by months since start', 'disciple-tools-genmapper' ),
+            /* translators: %s: the site's word for a church, e.g. Ecclesia */
+            'time_to_ecclesia' => sprintf( __( 'Time from start to %s', 'disciple-tools-genmapper' ), $terms['church'] ),
+            /* translators: %s: the site's word for a church, e.g. Ecclesia */
+            'time_to_ecclesia_caption' => sprintf( __( 'Share of groups that have reached %s, by months since they started. Groups that have not reached it yet still count until today (ticks).', 'disciple-tools-genmapper' ), $terms['church'] ),
+            /* translators: %s: the site's word for a church, e.g. Ecclesia */
+            'time_to_ecclesia_label' => sprintf( __( 'Step curve of the share of groups that have reached %s, by months since start', 'disciple-tools-genmapper' ), $terms['church'] ),
             'stages_over_time' => __( 'Groups by stage over time', 'disciple-tools-genmapper' ),
             'stages_over_time_caption' => __( 'How many groups were in each stage, month by month.', 'disciple-tools-genmapper' ),
             'stages_over_time_label' => __( 'Stacked area chart of groups in each stage per month', 'disciple-tools-genmapper' ),
@@ -159,7 +162,7 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             'months_short' => __( 'mo', 'disciple-tools-genmapper' ),
             'months_after_start' => __( 'months after start', 'disciple-tools-genmapper' ),
             'months_to_ecclesia' => __( 'Months to get there', 'disciple-tools-genmapper' ),
-            'had_become_ecclesia' => sprintf( /* translators: %s: the site's word for a church, e.g. Ecclesia */ __( 'had become an %s', 'disciple-tools-genmapper' ), $terms['church'] ),
+            'had_become_ecclesia' => sprintf( /* translators: %s: the site's word for a church, e.g. Ecclesia */ __( 'had reached %s', 'disciple-tools-genmapper' ), $terms['church'] ),
             'median' => __( 'Median', 'disciple-tools-genmapper' ),
             'median_time' => __( 'Median time to get there', 'disciple-tools-genmapper' ),
             'within_12_months' => __( 'Within 12 months', 'disciple-tools-genmapper' ),

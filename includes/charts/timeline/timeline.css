@@ -77,7 +77,7 @@ rect.gm-tl-ecclesia, path.gm-tl-ecclesia { fill: var(--gm-tl-ecclesia); }
 .gm-tl-tile { padding: 10px 12px; background: #f4f4f1; border-radius: 6px; }
 .gm-tl-tile small { display: block; font-size: 12px; color: var(--gm-tl-ink-2); }
 .gm-tl-tile b { font-size: 22px; font-weight: 600; }
-.gm-tl-tile b span { font-size: 13px; font-weight: 400; color: var(--gm-tl-ink-2); }
+.gm-tl-tile b span { display: block; font-size: 12px; font-weight: 400; color: var(--gm-tl-ink-2); }
 
 .gm-tl-table { margin-top: 20px; }
 .gm-tl-table table { width: 100%; font-size: 13px; }
