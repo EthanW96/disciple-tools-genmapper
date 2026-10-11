@@ -164,21 +164,22 @@
 
     /**
      * Coaches and coaching groups carrying more active groups than the setting allows.
-     * @returns {{coaches: Array<{name, count, groups}>, coachingGroups: Array<{name, groups, members}>}}
+     * @returns {{coaches: Array<{id, name, count, groups}>, coachingGroups: Array<{id, name, groups, members}>}}
      */
     const coachingLoad = (groups, stageById, coachingGroups, settings = DEFAULT_SETTINGS) => {
         const active = groups.filter((group) => isActive(group, stageById.get(group.id)));
         const byCoach = new Map();
         active.forEach((group) => (group.coaches || []).forEach((coach) => {
-            const entry = byCoach.get(coach.id) || { name: coach.name, groups: [] };
+            const entry = byCoach.get(coach.id) || { id: coach.id, name: coach.name, groups: [] };
             entry.groups.push(group.name);
             byCoach.set(coach.id, entry);
         }));
         const coaches = Array.from(byCoach.values())
             .filter((entry) => entry.groups.length > settings.maxGroupsPerCoach)
-            .map((entry) => ({ name: entry.name, count: entry.groups.length, groups: entry.groups }))
+            .map((entry) => ({ id: entry.id, name: entry.name, count: entry.groups.length, groups: entry.groups }))
             .sort((a, b) => b.count - a.count);
         const covered = (coachingGroups || []).map((coaching) => ({
+            id: coaching.id,
             name: coaching.name,
             members: (coaching.members || []).length,
             groups: active.filter((group) => (group.coaching || []).includes(coaching.id)).length,

@@ -162,7 +162,7 @@
         W.renderList(document.getElementById('gm-tl-watch'), groups, state.analysis, strings, {
             category: W.CATEGORIES.includes(filter.watch) ? filter.watch : '', groupsUrl: config.groups_url, onSelect: showJourney,
         });
-        W.renderLoad(document.getElementById('gm-tl-load'), state.analysis.load, strings);
+        W.renderLoad(document.getElementById('gm-tl-load'), state.analysis.load, strings, { contacts: config.contacts_url, groups: config.groups_url });
         window.GenMapperTimelineSwimlanes.render(document.getElementById('gm-tl-swimlanes'), rows, state.stageById, range, strings, showJourney, drawFlags);
         window.GenMapperTimelineTimeToEcclesia.render(document.getElementById('gm-tl-ecclesia'), D.timeToEcclesia(stageList, state.now), strings);
         window.GenMapperTimelineStages.render(document.getElementById('gm-tl-stages'), D.monthlyCounts(stageList, state.now), range, strings);

@@ -97,9 +97,10 @@
         return `<div class="gm-tl-flags"><b>${S.escape(strings.flags_title)}</b><ul>${items}</ul></div>`;
     };
 
-    const groupLink = (group, groupsUrl) => (groupsUrl
-        ? `<a href="${S.escape(groupsUrl + group.id)}">${S.escape(group.name)}</a>`
-        : S.escape(group.name));
+    // A record's name, linked to the record when its list URL is known
+    const recordLink = (record, listUrl) => (listUrl && record.id
+        ? `<a href="${S.escape(listUrl + record.id)}">${S.escape(record.name)}</a>`
+        : S.escape(record.name));
 
     /**
      * The watch list: one row per flagged group, most pressing first.
@@ -118,7 +119,7 @@
             return;
         }
         const rowHtml = ({ group, flags }, index) => `<tr${index >= LIST_LIMIT ? ' class="gm-tl-more" hidden' : ''}>
-            <td>${groupLink(group, groupsUrl)}<br><button type="button" class="gm-tl-linkbutton" data-group="${group.id}">${S.escape(strings.show_journey)}</button></td>
+            <td>${recordLink(group, groupsUrl)}<br><button type="button" class="gm-tl-linkbutton" data-group="${group.id}">${S.escape(strings.show_journey)}</button></td>
             <td><ul class="gm-tl-reasons">${flags.map((flag) => `<li><span class="gm-tl-flag-icon" aria-hidden="true">!</span>${S.escape(reason(flag, strings, analysis.settings))}</li>`).join('')}</ul></td>
             <td>${S.escape(S.formatDate(Math.min(...flags.map((flag) => flag.since))))}</td>
         </tr>`;
@@ -139,15 +140,16 @@
         }
     };
 
-    const renderLoad = (container, load, strings) => {
+    // urls: { contacts, groups } list URLs ending in "/", for links to each coach and coaching group
+    const renderLoad = (container, load, strings, urls = {}) => {
         const table = (head, body) => `<table class="gm-tl-watch"><thead><tr>${head.map((label) => `<th>${S.escape(label)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
         const parts = [];
         if (load.coaches.length) {
-            parts.push(table([strings.coach, strings.active_groups], load.coaches.map((coach) => `<tr><td>${S.escape(coach.name)}</td><td>${coach.count}</td></tr>`).join('')));
+            parts.push(table([strings.coach, strings.active_groups], load.coaches.map((coach) => `<tr><td>${recordLink(coach, urls.contacts)}</td><td>${coach.count}</td></tr>`).join('')));
         }
         if (load.coachingGroups.length) {
             parts.push(table([strings.coaching_group, strings.active_groups, strings.members, strings.groups_per_member],
-                load.coachingGroups.map((group) => `<tr><td>${S.escape(group.name)}</td><td>${group.groups}</td><td>${group.members}</td><td>${(group.groups / group.members).toFixed(1)}</td></tr>`).join('')));
+                load.coachingGroups.map((group) => `<tr><td>${recordLink(group, urls.groups)}</td><td>${group.groups}</td><td>${group.members}</td><td>${(group.groups / group.members).toFixed(1)}</td></tr>`).join('')));
         }
         container.innerHTML = parts.length ? parts.join('') : `<p class="gm-tl-note">${S.escape(strings.coaching_load_none)}</p>`;
     };

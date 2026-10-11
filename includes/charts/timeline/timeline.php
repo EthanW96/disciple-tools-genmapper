@@ -117,6 +117,7 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             'nonce' => wp_create_nonce( 'wp_rest' ),
             'chart_label' => DT_Genmapper_Metrics::chart_label(),
             'groups_url' => esc_url_raw( site_url( '/groups/' ) ),
+            'contacts_url' => esc_url_raw( site_url( '/contacts/' ) ),
             'can_view_movement' => $this->has_permission(),
             'watch' => DT_Genmapper_Health_Watch::settings(),
             'strings' => array_merge( $this->strings(), self::watch_strings() ),

@@ -107,6 +107,7 @@ test('coaching load: coaches and coaching groups over the limit', () => {
     const load = flags.coachingLoad(groups, stages, [{ id: 50, name: 'Team A', members: ['x'] }, { id: 51, name: 'Team B', members: ['y'] }], settings);
     assert.deepStrictEqual(load.coaches.map((c) => `${c.name}:${c.count}`), ['Busy coach:7']);
     assert.deepStrictEqual(load.coachingGroups.map((c) => `${c.name}:${c.groups}/${c.members}`), ['Team A:7/1']);
+    assert.deepStrictEqual([load.coaches[0].id, load.coachingGroups[0].id], [1, 50], 'ids for links to the records');
 });
 
 console.log(`${passed} tests passed`);
