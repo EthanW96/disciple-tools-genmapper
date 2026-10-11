@@ -55,7 +55,7 @@
      * Months by which `percentile` of groups reached each milestone (Kaplan–Meier, so groups
      * still on their way count). Falls back to the guide months when too few groups have reached it,
      * and never goes below them (records entered with their coach already set would give "0 months").
-     * When fewer than `percentile` of groups ever get there, not reaching it is normal: months is null.
+     * When fewer than `percentile` of groups have got there so far, not reaching it is normal: months is null.
      * @returns {Object} key -> { months, source: 'movement'|'guide'|'default'|'uncommon', movementMonths, reached }
      */
     const norms = (groups, stageById, now, settings = DEFAULT_SETTINGS) => {

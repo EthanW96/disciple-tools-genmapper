@@ -160,7 +160,7 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             /* translators: {milestone}: e.g. Coach; {months}: number of months */
             'pace_guide' => __( '{milestone} by {months} months (guide; your groups usually get there sooner)', 'disciple-tools-genmapper' ),
             /* translators: {milestone}: e.g. Coach */
-            'pace_uncommon' => __( '{milestone}: most groups never get there, so not flagged', 'disciple-tools-genmapper' ),
+            'pace_uncommon' => __( "{milestone}: most groups haven't gotten there yet, so not flagged", 'disciple-tools-genmapper' ),
             'pace_coach' => __( 'Coach', 'disciple-tools-genmapper' ),
             'pace_group' => $terms['group'],
             'pace_baptism' => __( 'First baptism', 'disciple-tools-genmapper' ),
