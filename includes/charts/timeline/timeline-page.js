@@ -33,6 +33,7 @@
                 ${W.CATEGORIES.map((key) => `<option value="${key}">${S.escape(strings[`watch_${key}`])}</option>`).join('')}
             </select></label>
             <label class="gm-tl-check"><input type="checkbox" id="gm-tl-inactive" checked> ${S.escape(strings.include_inactive)}</label>
+            <button type="button" class="button small hollow gm-tl-print" id="gm-tl-print">${S.escape(strings.print)}</button>
         </div>
         <p class="gm-tl-quality" id="gm-tl-quality"></p>
         ${section('gm-tl-watch', strings.health_watch, strings.watch_caption)}
@@ -171,6 +172,32 @@
         }
     };
 
+    // The filters as text, for the print-out header
+    const filterSummary = () => ['gm-tl-tree', 'gm-tl-period', 'gm-tl-watch-filter']
+        .map((id) => document.getElementById(id))
+        .map((select) => select.options[select.selectedIndex].text)
+        .concat(document.getElementById('gm-tl-inactive').checked ? [] : [strings.active_only])
+        .join(' · ');
+
+    const printTimelines = () => {
+        const filter = filters();
+        const groups = visibleGroups(filter);
+        window.GenMapperTimelinePrint.open({
+            title: `${config.chart_label} — ${strings.timelines}`,
+            filters: filterSummary(),
+            groups,
+            category: W.CATEGORIES.includes(filter.watch) ? filter.watch : '',
+            rows: D.treeOrder(watchedGroups(groups, filter.watch), state.stageById),
+            stageById: state.stageById,
+            range: timeRange(groups, filter.period),
+            analysis: state.analysis,
+            selected: state.selected,
+            drawFlags,
+            strings,
+            now: state.now,
+        }, (message) => window.alert(message));
+    };
+
     const fillTreeFilter = () => {
         const select = document.getElementById('gm-tl-tree');
         const roots = state.groups.filter((group) => state.rootOf.get(group.id) === group.id);
@@ -204,6 +231,7 @@
                 state.analysis = W.analyse(state.groups, state.stageById, state.coachingGroups, config.watch, state.now);
                 chart.innerHTML = layout();
                 fillTreeFilter();
+                document.getElementById('gm-tl-print').addEventListener('click', printTimelines);
                 ['gm-tl-tree', 'gm-tl-period', 'gm-tl-inactive', 'gm-tl-watch-filter'].forEach((id) => document.getElementById(id).addEventListener('change', renderAll));
                 let resizeTimer = null;
                 window.addEventListener('resize', () => {

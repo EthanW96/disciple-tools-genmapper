@@ -72,5 +72,6 @@
         });
     };
 
-    window.GenMapperTimelineSwimlanes = { render };
+    // Row positions, so the print-out can cut the chart into sheets
+    window.GenMapperTimelineSwimlanes = { render, GEOMETRY: { TOP, ROW, AXIS_SPACE } };
 })();

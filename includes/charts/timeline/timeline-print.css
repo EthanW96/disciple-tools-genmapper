@@ -1,0 +1,36 @@
+/* Timelines print-out (copied into the print document) and its options dialog.
+   Everything is scoped to .gm-print / .gm-print-dialog so the page itself is unaffected. */
+.gm-print { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #0b0b0b; background: #fff; }
+.gm-print * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.gm-print .gm-print-sheet { box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; break-after: page; page-break-after: always; }
+.gm-print .gm-print-sheet:last-child { break-after: auto; page-break-after: auto; }
+.gm-print .gm-print-header { box-sizing: border-box; font-size: 12pt; }
+.gm-print .gm-print-meta { font-size: 8.5pt; color: #52514e; }
+.gm-print .gm-tl-legend { margin: 0 0 1mm; font-size: 8pt; }
+.gm-print .gm-print-body { flex: 1; min-height: 0; }
+.gm-print .gm-print-footer { box-sizing: border-box; padding-top: 1.5mm; font-size: 8pt; color: #52514e; }
+.gm-print .gm-print-caption { margin: 0 0 2mm; font-size: 9pt; color: #52514e; }
+.gm-print .gm-print-chart svg { max-height: 140mm; }
+
+/* Swimlane sheets: cropped windows on one drawing, so the x positions match on every sheet */
+.gm-print svg.gm-print-window { display: block; overflow: hidden; }
+.gm-print .gm-print-overlap { fill: #fff; opacity: .6; }
+.gm-print .gm-print-trim { stroke: #0b0b0b; stroke-width: 1; stroke-dasharray: 6 4; }
+.gm-print .gm-print-join { stroke: #0b0b0b; stroke-width: 1; }
+.gm-print .gm-print-tick, .gm-print .gm-print-cross line { stroke: #0b0b0b; stroke-width: 1; }
+
+/* Watch list */
+.gm-print .gm-print-watch { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.gm-print .gm-print-watch th:first-child { width: 22%; }
+.gm-print .gm-print-watch th:last-child { width: 14%; }
+.gm-print .gm-print-watch th { text-align: left; border-bottom: 1px solid #c3c2b7; padding: 1mm 2mm; }
+.gm-print .gm-print-watch td { vertical-align: top; padding: .8mm 2mm; border-bottom: 1px solid #e1e0d9; }
+.gm-print .gm-print-watch div { line-height: 4.4mm; }
+
+/* Options dialog on the page */
+.gm-print-dialog { max-width: 420px; padding: 20px 24px; border: 1px solid rgba(11, 11, 11, .12); border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); }
+.gm-print-dialog::backdrop { background: rgba(0, 0, 0, .3); }
+.gm-print-dialog h3 { margin: 0 0 6px; font-size: 18px; }
+.gm-print-dialog label { display: block; margin: 6px 0; }
+.gm-print-dialog-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.gm-print-dialog-buttons .button { margin: 0; }

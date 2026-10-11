@@ -1,5 +1,5 @@
 // Health watch: flags for groups that may need attention, judged against the movement's own pace.
-// Pure functions (no DOM), so they can be tested in Node. Flags are prompts to check in, not verdicts.
+// Pure functions (no DOM), so they can be tested in Node.
 (function (root) {
     'use strict';
 

@@ -85,7 +85,13 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
         $this->enqueue( 'genmapper-timeline-swimlanes', 'timeline-swimlanes.js', [ 'genmapper-timeline-svg', 'genmapper-svg-text' ] );
         $this->enqueue( 'genmapper-timeline-time-to-ecclesia', 'timeline-time-to-ecclesia.js', [ 'genmapper-timeline-svg' ] );
         $this->enqueue( 'genmapper-timeline-stages', 'timeline-stages.js', [ 'genmapper-timeline-svg' ] );
-        $this->enqueue( 'genmapper-timeline-page', 'timeline-page.js', [ 'genmapper-timeline-journey', 'genmapper-timeline-watch', 'genmapper-timeline-swimlanes', 'genmapper-timeline-time-to-ecclesia', 'genmapper-timeline-stages' ] );
+        $charts_url = trailingslashit( dirname( plugin_dir_url( __FILE__ ) ) );
+        $charts_path = trailingslashit( dirname( plugin_dir_path( __FILE__ ) ) );
+        wp_enqueue_script( 'genmapper-print-frame', $charts_url . 'print-frame.js', [], filemtime( $charts_path . 'print-frame.js' ), true );
+        wp_enqueue_style( 'genmapper-timeline-print', plugin_dir_url( __FILE__ ) . 'timeline-print.css', [], filemtime( plugin_dir_path( __FILE__ ) . 'timeline-print.css' ) );
+        $this->enqueue( 'genmapper-timeline-print-layout', 'timeline-print-layout.js', [] );
+        $this->enqueue( 'genmapper-timeline-print', 'timeline-print.js', [ 'genmapper-print-frame', 'genmapper-timeline-print-layout', 'genmapper-timeline-watch', 'genmapper-timeline-swimlanes', 'genmapper-timeline-time-to-ecclesia', 'genmapper-timeline-stages' ] );
+        $this->enqueue( 'genmapper-timeline-page', 'timeline-page.js', [ 'genmapper-timeline-journey', 'genmapper-timeline-watch', 'genmapper-timeline-print', 'genmapper-timeline-swimlanes', 'genmapper-timeline-time-to-ecclesia', 'genmapper-timeline-stages' ] );
     }
 
     public function tile_scripts() {
@@ -131,7 +137,7 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
         $settings = DT_Genmapper_Health_Watch::settings();
         return [
             'health_watch' => __( 'Health watch', 'disciple-tools-genmapper' ),
-            'watch_caption' => __( 'Groups that may need a check-in, most pressing first. These are prompts, not verdicts: open the group to see what is happening.', 'disciple-tools-genmapper' ),
+            'watch_caption' => __( 'Groups that may need a check-in, most pressing first.', 'disciple-tools-genmapper' ),
             'watch_none' => __( 'Nothing flagged for this selection.', 'disciple-tools-genmapper' ),
             'watch_pace' => __( 'Behind the usual pace', 'disciple-tools-genmapper' ),
             'watch_quiet' => __( 'Gone quiet', 'disciple-tools-genmapper' ),
@@ -140,7 +146,6 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             'all_groups' => __( 'All groups', 'disciple-tools-genmapper' ),
             'flagged_only' => __( 'Flagged only', 'disciple-tools-genmapper' ),
             'flags_title' => __( 'Worth checking', 'disciple-tools-genmapper' ),
-            'flags_note' => __( 'Prompts for a check-in, not verdicts. Thresholds are in the plugin settings.', 'disciple-tools-genmapper' ),
             'what_to_check' => __( 'What to check', 'disciple-tools-genmapper' ),
             'since' => __( 'Since', 'disciple-tools-genmapper' ),
             /* translators: {count}: number of groups */
@@ -257,6 +262,23 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             'data_note' => __( 'About the data', 'disciple-tools-genmapper' ),
             'quality_no_start' => __( 'groups have no Start Date (using when they were entered in D.T.)', 'disciple-tools-genmapper' ),
             'quality_logged_ecclesia' => __( 'ecclesia dates come from when the change was recorded in D.T.', 'disciple-tools-genmapper' ),
+            'print' => __( 'Print', 'disciple-tools-genmapper' ),
+            'print_title' => __( 'Print on A4 (landscape)', 'disciple-tools-genmapper' ),
+            'print_intro' => __( 'Prints what the filters show now. Long swimlanes continue over several sheets that tape together top to bottom.', 'disciple-tools-genmapper' ),
+            'print_actual_size' => __( 'Print at 100% ("Actual size", not "Fit to page") so the sheets line up.', 'disciple-tools-genmapper' ),
+            /* translators: {next}: sheet number */
+            'print_join_note' => __( 'To join: trim sheet {next} on its dashed line, lay it over the last row of this sheet and line up the ticks and crosses.', 'disciple-tools-genmapper' ),
+            /* translators: {previous}: sheet number */
+            'print_trim_note' => __( 'Trim on the dashed line; the grey row repeats the last row of sheet {previous}.', 'disciple-tools-genmapper' ),
+            /* translators: {previous}: sheet number */
+            'print_continued' => __( 'continued from sheet {previous}', 'disciple-tools-genmapper' ),
+            /* translators: {number} and {total}: sheet numbers */
+            'print_sheet_of' => __( 'Sheet {number} of {total}', 'disciple-tools-genmapper' ),
+            'printed' => __( 'Printed', 'disciple-tools-genmapper' ),
+            'print_nothing' => __( 'Nothing selected to print.', 'disciple-tools-genmapper' ),
+            'print_failed' => __( 'The print-out could not be opened. Please try again.', 'disciple-tools-genmapper' ),
+            'cancel' => __( 'Cancel', 'disciple-tools-genmapper' ),
+            'active_only' => __( 'Active groups only', 'disciple-tools-genmapper' ),
             'quality_issues' => __( 'groups have dates out of order (e.g. ecclesia before start)', 'disciple-tools-genmapper' ),
         ];
     }

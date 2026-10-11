@@ -93,7 +93,7 @@
             return '';
         }
         const items = flags.map((flag) => `<li><span class="gm-tl-flag-icon" aria-hidden="true">!</span>${S.escape(reason(flag, strings, settings))} <span class="gm-tl-muted">· ${S.escape(strings.since)} ${S.escape(S.formatDate(flag.since))}</span></li>`).join('');
-        return `<div class="gm-tl-flags"><b>${S.escape(strings.flags_title)}</b><ul>${items}</ul><p class="gm-tl-caption">${S.escape(strings.flags_note)}</p></div>`;
+        return `<div class="gm-tl-flags"><b>${S.escape(strings.flags_title)}</b><ul>${items}</ul></div>`;
     };
 
     const groupLink = (group, groupsUrl) => (groupsUrl
