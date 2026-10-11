@@ -12,10 +12,17 @@
     const HEADLINE_MONTHS = 12;
 
     const tiles = (result, strings) => {
-        const median = result.median === null ? strings.not_reached_yet : `${Math.round(result.median)} ${strings.months}`;
         const within = `${Math.round(result.shareAt(HEADLINE_MONTHS) * 100)}%`;
+        // No median until half the groups have got there: say how many have so far instead
+        const soFar = strings.reached_so_far
+            .replace('{reached}', result.reached)
+            .replace('{total}', result.n)
+            .replace('{share}', result.n ? Math.round((result.reached / result.n) * 100) : 0);
+        const half = result.median === null
+            ? `${S.escape(strings.not_reached_yet)} <span>${S.escape(soFar)}</span>`
+            : S.escape(`${Math.round(result.median)} ${strings.months}`);
         return `<div class="gm-tl-tiles">
-            <div class="gm-tl-tile"><small>${S.escape(strings.median_time)}</small><b>${S.escape(median)}</b></div>
+            <div class="gm-tl-tile"><small>${S.escape(strings.median_time)}</small><b>${half}</b></div>
             <div class="gm-tl-tile"><small>${S.escape(strings.within_12_months)}</small><b>${S.escape(within)}</b></div>
             <div class="gm-tl-tile"><small>${S.escape(strings.groups_counted)}</small><b>${result.n} <span>(${result.censored.length} ${S.escape(strings.still_on_their_way)})</span></b></div>
         </div>`;

@@ -249,12 +249,16 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             'months_after_start' => __( 'months after start', 'disciple-tools-genmapper' ),
             'months_to_ecclesia' => __( 'Months to get there', 'disciple-tools-genmapper' ),
             'had_become_ecclesia' => sprintf( /* translators: %s: the site's word for a church, e.g. Ecclesia */ __( 'had reached %s', 'disciple-tools-genmapper' ), $terms['church'] ),
-            'median' => __( 'Median', 'disciple-tools-genmapper' ),
-            'median_time' => __( 'Median time to get there', 'disciple-tools-genmapper' ),
-            'within_12_months' => __( 'Within 12 months', 'disciple-tools-genmapper' ),
+            'median' => __( 'Half by', 'disciple-tools-genmapper' ),
+            /* translators: %s: the site's word for a church, e.g. Ecclesia */
+            'median_time' => sprintf( __( 'Half of groups become %s within', 'disciple-tools-genmapper' ), $terms['church'] ),
+            /* translators: %s: the site's word for a church, e.g. Ecclesia */
+            'within_12_months' => sprintf( __( 'Became %s within 12 months', 'disciple-tools-genmapper' ), $terms['church'] ),
+            /* translators: {reached}, {total}: numbers of groups; {share}: a percentage */
+            'reached_so_far' => __( '{reached} of {total} groups ({share}%) have so far', 'disciple-tools-genmapper' ),
             'groups_counted' => __( 'Groups counted', 'disciple-tools-genmapper' ),
             'still_on_their_way' => __( 'still on their way', 'disciple-tools-genmapper' ),
-            'not_reached_yet' => __( 'Not reached yet', 'disciple-tools-genmapper' ),
+            'not_reached_yet' => __( 'Not yet known', 'disciple-tools-genmapper' ),
             'small_sample' => __( 'Fewer than 10 groups: treat these figures as a rough guide.', 'disciple-tools-genmapper' ),
             'no_groups' => __( 'No groups to show for this selection.', 'disciple-tools-genmapper' ),
             'no_start_date' => __( 'This group has no start date yet, so there is no timeline to show.', 'disciple-tools-genmapper' ),
