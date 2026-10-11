@@ -94,13 +94,16 @@
         return `<b>${escape(names[event.kind] || event.kind)}</b>${escape(detail)}<br>${escape(when)}`;
     };
 
+    // Upward triangle centred on (x, y): the coaching motif used across the charts
+    const triangle = (x, y, half) => `${x},${y - half} ${x + half},${y + half * 0.8} ${x - half},${y + half * 0.8}`;
+
     // Distinct shape per event kind (colour is never the only cue)
     const eventMark = (parent, event, x, y, tip, strings) => {
         const half = MARK_SIZE / 2;
         if (event.kind === 'baptism') {
             el(parent, 'circle', { cx: x, cy: y, r: half + 0.5, class: 'gm-tl-ev gm-tl-ev--baptism' });
         } else if (event.kind === 'coach') {
-            el(parent, 'rect', { x: x - half + 1, y: y - half + 1, width: MARK_SIZE - 2, height: MARK_SIZE - 2, transform: `rotate(45 ${x} ${y})`, class: 'gm-tl-ev gm-tl-ev--coach' });
+            el(parent, 'polygon', { points: triangle(x, y, half + 1), class: 'gm-tl-ev gm-tl-ev--coach' });
         } else if (event.kind === 'multiplied') {
             el(parent, 'rect', { x: x - half, y: y - half, width: MARK_SIZE, height: MARK_SIZE, rx: 1.5, class: 'gm-tl-ev gm-tl-ev--multiplied' });
         } else if (event.kind === 'health') {
@@ -117,7 +120,7 @@
         <span><i class="gm-tl-swatch gm-tl-group"></i>${escape(strings.group)}</span>
         <span><i class="gm-tl-swatch gm-tl-ecclesia"></i>${escape(strings.ecclesia)}</span>
         <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" class="gm-tl-ev--baptism"/></svg>${escape(strings.baptisms)}</span>
-        <span><svg width="12" height="12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" transform="rotate(45 6 6)" class="gm-tl-ev--coach"/></svg>${escape(strings.coach_assigned)}</span>
+        <span><svg width="12" height="12" aria-hidden="true"><polygon points="${triangle(6, 6.5, 5.5)}" class="gm-tl-ev--coach"/></svg>${escape(strings.coach_assigned)}</span>
         <span><svg width="12" height="12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="1" class="gm-tl-ev--multiplied"/></svg>${escape(strings.multiplied)}</span>
         <span><svg width="12" height="12" aria-hidden="true"><line x1="6" y1="1" x2="6" y2="11" class="gm-tl-ev--health"/></svg>${escape(strings.health_added)}</span>
     </div>`;

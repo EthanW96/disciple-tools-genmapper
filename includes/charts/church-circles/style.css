@@ -67,7 +67,7 @@
     margin: 0 4px 0 12px;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
-    border-bottom: 13px solid #555;
+    border-bottom: 13px solid #e34948; /* coaching red, as on the chart */
     vertical-align: middle;
 }
 

@@ -1,6 +1,6 @@
 /* Group timelines. Colours validated with the dataviz palette checker:
    stages = one blue ramp in order (pre-group → group → ecclesia),
-   events = orange / violet / aqua, each with its own shape. */
+   events = violet baptisms (circle) / red coaching (triangle, the coaching motif) / aqua multiplied (square). */
 .gm-tl {
     --gm-tl-surface: #fcfcfb;
     --gm-tl-ink: #0b0b0b;
@@ -11,8 +11,8 @@
     --gm-tl-pre: #86b6ef;
     --gm-tl-group: #3987e5;
     --gm-tl-ecclesia: #184f95;
-    --gm-tl-baptism: #eb6834;
-    --gm-tl-coach: #4a3aa7;
+    --gm-tl-baptism: #4a3aa7;
+    --gm-tl-coach: #e34948;
     --gm-tl-multiplied: #1baf7a;
     position: relative;
     color: var(--gm-tl-ink);
