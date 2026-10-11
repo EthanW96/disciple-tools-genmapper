@@ -17,6 +17,19 @@ class DT_Genmapper_Health_Watch
         'dt_genmapper_watch_quiet_months' => [ 3, 1, 24 ],
         'dt_genmapper_watch_member_drop' => [ 30, 10, 90 ],
         'dt_genmapper_watch_coach_load' => [ 5, 1, 50 ],
+        'dt_genmapper_watch_months_coach' => [ 3, 1, 60 ],
+        'dt_genmapper_watch_months_group' => [ 4, 1, 60 ],
+        'dt_genmapper_watch_months_baptism' => [ 9, 1, 60 ],
+        'dt_genmapper_watch_months_ecclesia' => [ 18, 1, 60 ],
+        'dt_genmapper_watch_months_multiplied' => [ 24, 1, 60 ],
+    ];
+    // milestone key (timeline-flags.js MILESTONES) => option holding its guide months
+    const MILESTONE_OPTIONS = [
+        'coach' => 'dt_genmapper_watch_months_coach',
+        'group' => 'dt_genmapper_watch_months_group',
+        'baptism' => 'dt_genmapper_watch_months_baptism',
+        'ecclesia' => 'dt_genmapper_watch_months_ecclesia',
+        'multiplied' => 'dt_genmapper_watch_months_multiplied',
     ];
     const KEY_PRACTICES_OPTION = 'dt_genmapper_watch_key_practices';
 
@@ -30,6 +43,24 @@ class DT_Genmapper_Health_Watch
         return array_map( function ( $option ) {
             return $option['label'] ?? '';
         }, $fields['health_metrics']['default'] ?? [] );
+    }
+
+    /**
+     * Admin labels for the guide months of each milestone, in the site's own terms.
+     *
+     * @return array option => label
+     */
+    public static function milestone_labels() {
+        $terms = DT_Genmapper_Metrics::dt_terms();
+        return [
+            'dt_genmapper_watch_months_coach' => __( 'Coach assigned', 'disciple-tools-genmapper' ),
+            /* translators: %s: the site's word for a group, e.g. Discovery Group */
+            'dt_genmapper_watch_months_group' => sprintf( __( 'Became a %s', 'disciple-tools-genmapper' ), $terms['group'] ),
+            'dt_genmapper_watch_months_baptism' => __( 'First baptism', 'disciple-tools-genmapper' ),
+            /* translators: %s: the site's word for a church, e.g. Ecclesia */
+            'dt_genmapper_watch_months_ecclesia' => sprintf( __( 'Became %s', 'disciple-tools-genmapper' ), $terms['church'] ),
+            'dt_genmapper_watch_months_multiplied' => __( 'First child group', 'disciple-tools-genmapper' ),
+        ];
     }
 
     public static function number( string $option ) {
@@ -59,6 +90,7 @@ class DT_Genmapper_Health_Watch
             'quietMonths' => self::number( 'dt_genmapper_watch_quiet_months' ),
             'memberDropShare' => self::number( 'dt_genmapper_watch_member_drop' ) / 100,
             'maxGroupsPerCoach' => self::number( 'dt_genmapper_watch_coach_load' ),
+            'milestoneMonths' => array_map( [ self::class, 'number' ], self::MILESTONE_OPTIONS ),
             'keyPractices' => self::key_practices(),
             'practiceLabels' => self::practice_options(),
         ];

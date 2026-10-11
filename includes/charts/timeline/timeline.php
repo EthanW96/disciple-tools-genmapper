@@ -156,6 +156,8 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             'pace_item' => __( '{milestone} by {months} months', 'disciple-tools-genmapper' ),
             /* translators: {milestone}: e.g. Coach; {months}: number of months */
             'pace_default' => __( '{milestone} by {months} months (guide: too few groups yet)', 'disciple-tools-genmapper' ),
+            /* translators: {milestone}: e.g. Coach; {months}: number of months */
+            'pace_guide' => __( '{milestone} by {months} months (guide; your groups usually get there sooner)', 'disciple-tools-genmapper' ),
             /* translators: {milestone}: e.g. Coach */
             'pace_uncommon' => __( '{milestone}: most groups never get there, so not flagged', 'disciple-tools-genmapper' ),
             'pace_coach' => __( 'Coach', 'disciple-tools-genmapper' ),
@@ -172,6 +174,8 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             'flag_milestone_multiplied' => __( 'Not multiplied yet', 'disciple-tools-genmapper' ),
             /* translators: {age}: months since the group started, {share}: a percentage, {norm}: months */
             'flag_overdue_movement' => __( '{age} months in; {share}% of groups got there by {norm} months', 'disciple-tools-genmapper' ),
+            /* translators: {age}: months since the group started, {norm}: months */
+            'flag_overdue_guide' => __( '{age} months in; the guide is {norm} months', 'disciple-tools-genmapper' ),
             /* translators: {age}: months since the group started, {norm}: months */
             'flag_overdue_default' => __( '{age} months in; the usual guide is {norm} months (too few groups yet to measure your own pace)', 'disciple-tools-genmapper' ),
             /* translators: {months}: number of months */

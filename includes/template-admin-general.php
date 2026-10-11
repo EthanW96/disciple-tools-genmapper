@@ -263,6 +263,24 @@
                     </tr>
                     <tr>
                         <td>
+                            <b><?php esc_html_e( 'Guide: months to each milestone', 'disciple-tools-genmapper' )?></b>
+                        </td>
+                        <td>
+                            <?php foreach ( DT_Genmapper_Health_Watch::milestone_labels() as $milestone_option => $milestone_label ) : ?>
+                                <label style="display: inline-block; margin: 0 12px 6px 0">
+                                    <?php echo esc_html( $milestone_label ) ?>
+                                    <input type="number" name="<?php echo esc_attr( $milestone_option ) ?>" value="<?php echo esc_attr( $watch_numbers[ $milestone_option ] ) ?>"
+                                           min="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS[ $milestone_option ][1] ) ?>"
+                                           max="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS[ $milestone_option ][2] ) ?>" style="width: 5em">
+                                </label>
+                            <?php endforeach; ?>
+                            <p>
+                                <?php esc_html_e( 'A group is never flagged as behind sooner than these months. They are also used until at least 10 groups have reached a milestone. Your own pace can only make a flag later: when your groups usually get there sooner (e.g. coaches added together with a new record), the guide is used.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
                             <b><?php esc_html_e( 'Key practices', 'disciple-tools-genmapper' )?></b>
                         </td>
                         <td>

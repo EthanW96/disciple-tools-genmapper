@@ -15,17 +15,15 @@
         keyPractices: ['church_leaders', 'church_baptism', 'church_communion'],
         memberDropShare: 0.3,
         maxGroupsPerCoach: 5,
-        minSample: 10, // fewer groups than this reached a milestone: use the default months instead
+        minSample: 10, // fewer groups than this reached a milestone: use the guide months instead
+        // Guide months per milestone: never flagged sooner, and used for small movements (plugin settings)
+        milestoneMonths: { coach: 3, group: 4, baptism: 9, ecclesia: 18, multiplied: 24 },
     };
 
-    // Milestones every group is expected to reach, with fallback months for small movements
-    const MILESTONES = [
-        { key: 'coach', defaultMonths: 3 },
-        { key: 'group', defaultMonths: 4 },
-        { key: 'baptism', defaultMonths: 9 },
-        { key: 'ecclesia', defaultMonths: 18 },
-        { key: 'multiplied', defaultMonths: 24 },
-    ];
+    // Milestones every group is expected to reach
+    const MILESTONES = [{ key: 'coach' }, { key: 'group' }, { key: 'baptism' }, { key: 'ecclesia' }, { key: 'multiplied' }];
+
+    const guideMonths = (key, settings) => (settings.milestoneMonths || {})[key] || DEFAULT_SETTINGS.milestoneMonths[key];
 
     const firstEventTime = (group, kind) => {
         const event = (group.events || []).find((e) => e.kind === kind);
@@ -55,9 +53,10 @@
 
     /**
      * Months by which `percentile` of groups reached each milestone (Kaplan–Meier, so groups
-     * still on their way count). Falls back to defaults when too few groups have reached it.
+     * still on their way count). Falls back to the guide months when too few groups have reached it,
+     * and never goes below them (records entered with their coach already set would give "0 months").
      * When fewer than `percentile` of groups ever get there, not reaching it is normal: months is null.
-     * @returns {Object} key -> { months, source: 'movement'|'default'|'uncommon', reached }
+     * @returns {Object} key -> { months, source: 'movement'|'guide'|'default'|'uncommon', movementMonths, reached }
      */
     const norms = (groups, stageById, now, settings = DEFAULT_SETTINGS) => {
         const result = {};
@@ -67,12 +66,18 @@
                 return { start: stage.start, end: stage.end, reachedAt: stage.start ? reachedAt(milestone.key, group, stage) : null };
             });
             const estimate = Data.timeToMilestone(items, now);
+            const guide = guideMonths(milestone.key, settings);
             if (estimate.reached < settings.minSample) {
-                result[milestone.key] = { months: milestone.defaultMonths, source: 'default', reached: estimate.reached };
+                result[milestone.key] = { months: guide, source: 'default', movementMonths: null, reached: estimate.reached };
                 return;
             }
-            const months = estimate.timeForShare(settings.percentile);
-            result[milestone.key] = { months, source: months === null ? 'uncommon' : 'movement', reached: estimate.reached };
+            const movementMonths = estimate.timeForShare(settings.percentile);
+            if (movementMonths === null) {
+                result[milestone.key] = { months: null, source: 'uncommon', movementMonths, reached: estimate.reached };
+                return;
+            }
+            const isFaster = movementMonths < guide;
+            result[milestone.key] = { months: isFaster ? guide : movementMonths, source: isFaster ? 'guide' : 'movement', movementMonths, reached: estimate.reached };
         });
         return result;
     };

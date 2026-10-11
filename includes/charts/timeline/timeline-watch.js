@@ -44,7 +44,7 @@
         const months = (value) => Math.round(value);
         switch (flag.kind) {
         case 'overdue': {
-            const detail = flag.normSource === 'movement' ? strings.flag_overdue_movement : strings.flag_overdue_default;
+            const detail = { movement: strings.flag_overdue_movement, guide: strings.flag_overdue_guide }[flag.normSource] || strings.flag_overdue_default;
             return `${strings[`flag_milestone_${flag.milestone}`]}: ${format(detail, { age: months(flag.ageMonths), norm: months(flag.normMonths), share: Math.round(settings.percentile * 100) })}`;
         }
         case 'quiet':
@@ -69,7 +69,8 @@
             if (norm.months === null) {
                 return format(strings.pace_uncommon, { milestone: name });
             }
-            return format(norm.source === 'default' ? strings.pace_default : strings.pace_item, { milestone: name, months: Math.round(norm.months) });
+            const template = { default: strings.pace_default, guide: strings.pace_guide }[norm.source] || strings.pace_item;
+            return format(template, { milestone: name, months: Math.round(norm.months) });
         });
         return `${format(strings.pace_summary, { share })} ${items.join(' · ')}`;
     };

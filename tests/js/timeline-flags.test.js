@@ -41,6 +41,18 @@ test('norms: a milestone fewer than the percentile of groups ever reach is not f
     assert.ok(!list.some((f) => f.milestone === 'coach'));
 });
 
+test('norms: coaches entered with the record ("0 months") fall back to the guide months; a group is not flagged sooner', () => {
+    const fresh = [1, 2, 3, 4].map((id) => coached(id, 0)).concat([{ ...movement[4], id: 5, started: at(23) }]);
+    const stages = new Map(fresh.map((g) => [g.id, data.stages(g, NOW)]));
+    const result = flags.norms(fresh, stages, NOW, settings);
+    assert.strictEqual(result.coach.source, 'guide');
+    assert.strictEqual(result.coach.months, 3);
+    assert.strictEqual(result.coach.movementMonths, 0);
+    assert.ok(!flags.flagsFor(fresh[4], stages.get(5), result, settings, NOW).some((f) => f.milestone === 'coach'), 'one month old: not flagged yet');
+    const custom = flags.norms(fresh, stages, NOW, { ...settings, milestoneMonths: { ...settings.milestoneMonths, coach: 6 } });
+    assert.strictEqual(custom.coach.months, 6);
+});
+
 test('overdue: the uncoached group is flagged, with how far past the norm it is', () => {
     const groupNorms = flags.norms(movement, stageById, NOW, settings);
     const list = flags.flagsFor(movement[4], stageById.get(5), groupNorms, settings, NOW);
