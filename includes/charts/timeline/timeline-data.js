@@ -68,16 +68,16 @@
     };
 
     /**
-     * Kaplan–Meier estimate of the share of groups that have become an ecclesia, by months since start.
-     * Groups that haven't become one yet count until now (or until they ended): they are "censored".
-     * @param {Array} stageList results of stages()
+     * Kaplan–Meier estimate of the share of groups that have reached a milestone, by months since start.
+     * Groups that haven't reached it yet count until now (or until they ended): they are "censored".
+     * @param {Array<{start, end, reachedAt}>} items one per group; reachedAt is null when not reached
      */
-    const timeToEcclesia = (stageList, now) => {
-        const observations = stageList
+    const timeToMilestone = (items, now) => {
+        const observations = items
             .filter((item) => item.start)
             .map((item) => {
-                const reached = item.ecclesia !== null;
-                const stop = reached ? item.ecclesia : Math.min(item.end || now, now);
+                const reached = item.reachedAt !== null && item.reachedAt !== undefined;
+                const stop = reached ? Math.max(item.reachedAt, item.start) : Math.min(item.end || now, now);
                 return { t: months(Math.max(0, stop - item.start)), reached };
             });
         const eventTimes = Array.from(new Set(observations.filter((o) => o.reached).map((o) => o.t))).sort((a, b) => a - b);
@@ -92,6 +92,11 @@
             curve.push({ t, share: 1 - survival, atRisk });
         });
         const shareAt = (t) => curve.reduce((share, point) => (point.t <= t ? point.share : share), 0);
+        // Months by which this share of groups had reached it (null if never estimated that high)
+        const timeForShare = (share) => {
+            const point = curve.find((p) => p.share >= share);
+            return point ? point.t : null;
+        };
         const medianPoint = curve.find((point) => point.share >= 0.5);
         return {
             curve,
@@ -101,8 +106,14 @@
             censored: observations.filter((o) => !o.reached),
             median: medianPoint ? medianPoint.t : null,
             shareAt,
+            timeForShare,
         };
     };
+
+    // Share of groups that have become an ecclesia, by months since start
+    const timeToEcclesia = (stageList, now) => timeToMilestone(
+        stageList.map((item) => ({ start: item.start, end: item.end, reachedAt: item.ecclesia })), now
+    );
 
     /**
      * Groups in each stage at the start of every month, from the earliest start until now.
@@ -148,7 +159,7 @@
         return ordered;
     };
 
-    const api = { SECONDS_PER_MONTH, months, stages, timeToEcclesia, monthlyCounts, treeOrder };
+    const api = { SECONDS_PER_MONTH, months, stages, timeToMilestone, timeToEcclesia, monthlyCounts, treeOrder };
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = api;
     } else {

@@ -20,7 +20,10 @@
     const coachingGroups = coachingGroupsEnabled()
       ? `<span class="coaching-legend__triangle"></span>${window.lodash.escape(localizedObject.translation.coaching_legend)}`
       : ''
-    return coached || coachingGroups ? `<div class="coaching-legend">${coached}${coachingGroups}</div>` : ''
+    const flags = window.GenMapperHealthBadges
+      ? `<span class="coaching-legend__flag" aria-hidden="true">!</span>${window.lodash.escape(window.genHealthFlags.strings.flags_legend)}`
+      : ''
+    return coached || coachingGroups || flags ? `<div class="coaching-legend">${coached}${coachingGroups}${flags}</div>` : ''
   }
 
   // Coaching groups: triangle slots in the layout, and shapes drawn behind the tree
@@ -39,6 +42,24 @@
         window.open(`${wpApiShare.site_url}/groups/${encodeURIComponent(triangle.getAttribute('data-record-id'))}/`, '_blank')
       }
     })
+  }
+
+  // Amber "!" badges for groups the health watch flags (setting off by default)
+  function enable_health_flags(chart) {
+    if (!window.GenMapperHealthBadges) {
+      return
+    }
+    const chartElement = '#genmapper-graph-svg'
+    const previous = chart.afterRedraw
+    chart.afterRedraw = (nodes, layer) => {
+      if (typeof previous === 'function') {
+        previous(nodes, layer)
+      }
+      window.GenMapperHealthBadges.draw(chartElement)
+    }
+    window.GenMapperHealthBadges.load()
+      .then(() => window.GenMapperHealthBadges.draw(chartElement))
+      .catch((error) => console.error('Egg chart: health flags could not be loaded', error))
   }
 
   function show_template_overview() {
@@ -93,6 +114,7 @@
 
     window.genmapper = new window.genMapperClass()
     enable_coaching_groups(window.genmapper)
+    enable_health_flags(window.genmapper)
     get_groups()
 
     /**

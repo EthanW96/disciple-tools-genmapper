@@ -14,6 +14,7 @@
     --gm-tl-baptism: #4a3aa7;
     --gm-tl-coach: #e34948;
     --gm-tl-multiplied: #1baf7a;
+    --gm-tl-warning: #fab219; /* status: always with "!" and words */
     position: relative;
     color: var(--gm-tl-ink);
 }
@@ -78,6 +79,21 @@ rect.gm-tl-ecclesia, path.gm-tl-ecclesia { fill: var(--gm-tl-ecclesia); }
 .gm-tl-tile small { display: block; font-size: 12px; color: var(--gm-tl-ink-2); }
 .gm-tl-tile b { font-size: 22px; font-weight: 600; }
 .gm-tl-tile b span { display: block; font-size: 12px; font-weight: 400; color: var(--gm-tl-ink-2); }
+
+.gm-tl-flag circle { fill: var(--gm-tl-warning); stroke: var(--gm-tl-surface); stroke-width: 2; }
+.gm-tl-svg .gm-tl-flag text { fill: var(--gm-tl-ink); font-size: 11px; font-weight: 700; }
+.gm-tl-flag-icon {
+    display: inline-block; width: 15px; height: 15px; margin-right: 6px; border-radius: 50%;
+    background: var(--gm-tl-warning); color: var(--gm-tl-ink); font-size: 11px; font-weight: 700; line-height: 15px; text-align: center;
+}
+.gm-tl-flags { margin-top: 8px; font-size: 13px; }
+.gm-tl-flags ul, .gm-tl-reasons { margin: 4px 0; list-style: none; }
+.gm-tl-flags li, .gm-tl-reasons li { margin: 2px 0; }
+.gm-tl-muted { color: var(--gm-tl-ink-2); }
+.gm-tl-watch { width: 100%; font-size: 13px; }
+.gm-tl-watch th { text-align: left; }
+.gm-tl-watch td { vertical-align: top; }
+.gm-tl-linkbutton { padding: 0; border: 0; background: none; color: var(--gm-tl-ink-2); font-size: 12px; text-decoration: underline; cursor: pointer; }
 
 .gm-tl-table { margin-top: 20px; }
 .gm-tl-table table { width: 100%; font-size: 13px; }

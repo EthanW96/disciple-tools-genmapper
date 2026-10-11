@@ -10,7 +10,6 @@ if ( !defined( 'ABSPATH' ) ) {
  */
 class DT_Genmapper_Timeline_Queries
 {
-    const LOGGED_FIELDS = [ 'group_type', 'group_status', 'health_metrics' ];
     const DELETED_VALUE = 'value_deleted';
 
     /**
@@ -30,7 +29,8 @@ class DT_Genmapper_Timeline_Queries
         $dates = $this->dates();
         $activity = $this->activity( $group_id );
         $baptisms = $this->baptisms( $group_id );
-        foreach ( [ $dates, $activity, $baptisms ] as $result ) {
+        $state = ( new DT_Genmapper_Timeline_State_Queries() )->current();
+        foreach ( [ $dates, $activity, $baptisms, $state ] as $result ) {
             if ( is_wp_error( $result ) ) {
                 return $result;
             }
@@ -48,9 +48,21 @@ class DT_Genmapper_Timeline_Queries
             if ( $group_id && $id !== $group_id ) {
                 continue;
             }
-            $groups[] = $this->group_history( $row, $generations[ $row['id'] ] ?? 1, $dates, $activity[ $id ] ?? [], $baptisms[ $id ] ?? [], $children[ $id ] ?? [], $tree, $health_labels );
+            $history = $this->group_history( $row, $generations[ $row['id'] ] ?? 1, $dates, $activity[ $id ] ?? [], $baptisms[ $id ] ?? [], $children[ $id ] ?? [], $tree, $health_labels );
+            $groups[] = array_merge( $history, $this->current_state( $state['groups'][ $id ] ?? [] ) );
         }
-        return [ 'groups' => $groups ];
+        return [ 'groups' => $groups, 'coaching_groups' => $state['coaching_groups'] ];
+    }
+
+    // Defaults for groups with nothing recorded
+    private function current_state( array $state ): array {
+        return [
+            'health' => $state['health'] ?? [],
+            'member_count' => $state['member_count'] ?? null,
+            'coaches' => $state['coaches'] ?? [],
+            'coaching' => $state['coaching'] ?? [],
+            'last_activity' => $state['last_activity'] ?? null,
+        ];
     }
 
     private function group_history( array $row, int $generation, array $dates, array $logged, array $baptisms, array $child_ids, array $tree, array $health_labels ): array {
@@ -96,9 +108,15 @@ class DT_Genmapper_Timeline_Queries
             if ( $entry['meta_key'] === 'group_type' || $entry['meta_key'] === 'group_status' ) {
                 $kind = $entry['meta_key'] === 'group_type' ? 'type' : 'status';
                 $events[] = [ 'kind' => $kind, 'time' => $time, 'value' => $value, 'source' => 'log' ];
-            } elseif ( $entry['meta_key'] === 'health_metrics' && $value !== self::DELETED_VALUE && !isset( $health_seen[ $value ] ) ) {
+            } elseif ( $entry['meta_key'] === 'health_metrics' && $value === self::DELETED_VALUE ) {
+                $removed = (string) $entry['old_value'];
+                $events[] = [ 'kind' => 'health_removed', 'time' => $time, 'value' => $removed, 'label' => $health_labels[ $removed ] ?? $removed, 'source' => 'log' ];
+            } elseif ( $entry['meta_key'] === 'health_metrics' && !isset( $health_seen[ $value ] ) ) {
                 $health_seen[ $value ] = true; // first time each practice was marked
                 $events[] = [ 'kind' => 'health', 'time' => $time, 'value' => $value, 'label' => $health_labels[ $value ] ?? $value, 'source' => 'log' ];
+            } elseif ( $entry['meta_key'] === 'member_count' && is_numeric( $value ) ) {
+                $from = is_numeric( $entry['old_value'] ) ? (int) $entry['old_value'] : null;
+                $events[] = [ 'kind' => 'members', 'time' => $time, 'from' => $from, 'to' => (int) $value, 'source' => 'log' ];
             } elseif ( $entry['meta_key'] === 'groups_to_coaches' ) {
                 $events[] = [ 'kind' => 'coach', 'time' => $time, 'label' => (string) $entry['other_name'], 'source' => 'log' ];
             }
@@ -181,14 +199,14 @@ class DT_Genmapper_Timeline_Queries
     private function activity( int $group_id ) {
         global $wpdb;
         $rows = $wpdb->get_results( $wpdb->prepare( "
-            SELECT a.object_id, a.action, a.meta_key, a.meta_value, a.hist_time, other.post_title as other_name
+            SELECT a.object_id, a.action, a.meta_key, a.meta_value, a.old_value, a.hist_time, other.post_title as other_name
             FROM $wpdb->dt_activity_log as a
             LEFT JOIN $wpdb->posts as other
               ON a.meta_key = 'groups_to_coaches' AND other.ID = a.meta_value
             WHERE a.object_type = 'groups'
               AND ( %d = 0 OR a.object_id = %d )
               AND (
-                ( a.action = 'field_update' AND a.meta_key IN ( 'group_type', 'group_status', 'health_metrics' ) )
+                ( a.action = 'field_update' AND a.meta_key IN ( 'group_type', 'group_status', 'health_metrics', 'member_count' ) )
                 OR ( a.action = 'connected to' AND a.meta_key = 'groups_to_coaches' )
               )
             ORDER BY a.hist_time ASC, a.histid ASC

@@ -5,12 +5,14 @@
     const config = window.genTimeline;
     const S = window.GenMapperTimelineSvg;
     const D = window.GenMapperTimelineData;
+    const W = window.GenMapperTimelineWatch;
     const strings = config.strings;
     const YEAR = 365.25 * 86400;
     const PERIODS = { all: null, three_years: 3 * YEAR, one_year: YEAR };
     const RESIZE_DELAY_MS = 200;
+    const FLAG_MERGE_PX = 12; // flags closer than this on a swimlane share one marker
 
-    const state = { groups: [], stageById: new Map(), rootOf: new Map(), selected: null, now: Math.floor(Date.now() / 1000) };
+    const state = { groups: [], coachingGroups: [], stageById: new Map(), rootOf: new Map(), analysis: null, selected: null, now: Math.floor(Date.now() / 1000) };
 
     const section = (id, title, caption) => `<section class="gm-tl-section">
         <h3>${S.escape(title)}</h3><p class="gm-tl-caption">${S.escape(caption)}</p><div id="${id}" class="gm-tl-view"></div>
@@ -25,9 +27,16 @@
                 <option value="three_years">${S.escape(strings.last_3_years)}</option>
                 <option value="one_year">${S.escape(strings.last_year)}</option>
             </select></label>
+            <label>${S.escape(strings.health_watch)} <select id="gm-tl-watch-filter">
+                <option value="">${S.escape(strings.all_groups)}</option>
+                <option value="flagged">${S.escape(strings.flagged_only)}</option>
+                ${W.CATEGORIES.map((key) => `<option value="${key}">${S.escape(strings[`watch_${key}`])}</option>`).join('')}
+            </select></label>
             <label class="gm-tl-check"><input type="checkbox" id="gm-tl-inactive" checked> ${S.escape(strings.include_inactive)}</label>
         </div>
         <p class="gm-tl-quality" id="gm-tl-quality"></p>
+        ${section('gm-tl-watch', strings.health_watch, strings.watch_caption)}
+        ${section('gm-tl-load', strings.coaching_load, strings.coaching_load_caption)}
         ${S.legend(strings)}
         <section class="gm-tl-section" id="gm-tl-detail-section"><h3 id="gm-tl-detail-title">${S.escape(strings.journey)}</h3>
             <p class="gm-tl-caption">${S.escape(strings.journey_hint)}</p><div id="gm-tl-detail" class="gm-tl-view"></div></section>
@@ -57,7 +66,33 @@
         tree: document.getElementById('gm-tl-tree').value,
         period: document.getElementById('gm-tl-period').value,
         includeInactive: document.getElementById('gm-tl-inactive').checked,
+        watch: document.getElementById('gm-tl-watch-filter').value,
     });
+
+    const flagsOf = (group) => state.analysis.flagsById.get(group.id) || [];
+
+    // The watch filter narrows the swimlanes and table, not the movement-wide charts
+    const watchedGroups = (groups, watch) => {
+        if (!watch) {
+            return groups;
+        }
+        return groups.filter((group) => flagsOf(group).length && W.matchesCategory(flagsOf(group), watch === 'flagged' ? '' : watch));
+    };
+
+    // Amber "!" where each flag began; nearby flags share one marker
+    const drawFlags = (row, group, y, clampX, tip) => {
+        const clusters = [];
+        flagsOf(group).slice().sort((a, b) => a.since - b.since).forEach((flag) => {
+            const x = clampX(flag.since);
+            const last = clusters[clusters.length - 1];
+            if (last && x - last.x < FLAG_MERGE_PX) {
+                last.flags.push(flag);
+            } else {
+                clusters.push({ x, flags: [flag] });
+            }
+        });
+        clusters.forEach((cluster) => W.flagMark(row, cluster.x, y, tip, W.flagTip(group, cluster.flags, strings, state.analysis.settings)));
+    };
 
     const visibleGroups = (filter) => state.groups.filter((group) => {
         if (filter.tree && String(state.rootOf.get(group.id)) !== filter.tree) {
@@ -103,10 +138,16 @@
         return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
     };
 
+    const renderJourney = (group) => {
+        const detail = document.getElementById('gm-tl-detail');
+        window.GenMapperTimelineJourney.render(detail, group, state.stageById.get(group.id), strings, state.now);
+        detail.insertAdjacentHTML('beforeend', W.flagListHtml(flagsOf(group), strings, state.analysis.settings));
+    };
+
     const showJourney = (group) => {
         state.selected = group;
         document.getElementById('gm-tl-detail-title').textContent = `${strings.journey}: ${group.name}`;
-        window.GenMapperTimelineJourney.render(document.getElementById('gm-tl-detail'), group, state.stageById.get(group.id), strings, state.now);
+        renderJourney(group);
         document.getElementById('gm-tl-detail-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
@@ -114,15 +155,19 @@
         const filter = filters();
         const groups = visibleGroups(filter);
         const range = timeRange(groups, filter.period);
-        const rows = D.treeOrder(groups, state.stageById);
+        const rows = D.treeOrder(watchedGroups(groups, filter.watch), state.stageById);
         const stageList = groups.map((group) => state.stageById.get(group.id));
         document.getElementById('gm-tl-quality').textContent = qualityNote(groups);
-        window.GenMapperTimelineSwimlanes.render(document.getElementById('gm-tl-swimlanes'), rows, state.stageById, range, strings, showJourney);
+        W.renderList(document.getElementById('gm-tl-watch'), groups, state.analysis, strings, {
+            category: W.CATEGORIES.includes(filter.watch) ? filter.watch : '', groupsUrl: config.groups_url, onSelect: showJourney,
+        });
+        W.renderLoad(document.getElementById('gm-tl-load'), state.analysis.load, strings);
+        window.GenMapperTimelineSwimlanes.render(document.getElementById('gm-tl-swimlanes'), rows, state.stageById, range, strings, showJourney, drawFlags);
         window.GenMapperTimelineTimeToEcclesia.render(document.getElementById('gm-tl-ecclesia'), D.timeToEcclesia(stageList, state.now), strings);
         window.GenMapperTimelineStages.render(document.getElementById('gm-tl-stages'), D.monthlyCounts(stageList, state.now), range, strings);
         document.getElementById('gm-tl-table').innerHTML = tableHtml(rows);
         if (state.selected && groups.some((group) => group.id === state.selected.id)) {
-            window.GenMapperTimelineJourney.render(document.getElementById('gm-tl-detail'), state.selected, state.stageById.get(state.selected.id), strings, state.now);
+            renderJourney(state.selected);
         }
     };
 
@@ -155,9 +200,11 @@
                 state.groups = body.groups;
                 state.stageById = new Map(body.groups.map((group) => [group.id, D.stages(group, state.now)]));
                 state.rootOf = firstGenerationRoots(body.groups);
+                state.coachingGroups = body.coaching_groups || [];
+                state.analysis = W.analyse(state.groups, state.stageById, state.coachingGroups, config.watch, state.now);
                 chart.innerHTML = layout();
                 fillTreeFilter();
-                ['gm-tl-tree', 'gm-tl-period', 'gm-tl-inactive'].forEach((id) => document.getElementById(id).addEventListener('change', renderAll));
+                ['gm-tl-tree', 'gm-tl-period', 'gm-tl-inactive', 'gm-tl-watch-filter'].forEach((id) => document.getElementById(id).addEventListener('change', renderAll));
                 let resizeTimer = null;
                 window.addEventListener('resize', () => {
                     clearTimeout(resizeTimer);

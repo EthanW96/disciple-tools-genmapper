@@ -90,6 +90,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         ], filemtime( plugin_dir_path( __FILE__ ) . $this->js_file_name ), true);
 
         $this->print_pack_scripts( $group_fields );
+        $this->health_flag_scripts();
 
         // Localize script with array data
         wp_localize_script(
@@ -120,6 +121,30 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
     /**
      * Shared SVG text helpers and the coaching group layout/shapes (Groups chart only)
      */
+    // Health watch badges on the circles, when that setting is on (they reuse the timeline scripts)
+    private function health_flag_scripts() {
+        if ( !get_option( 'dt_genmapper_show_health_flags', false ) ) {
+            return;
+        }
+        $url = trailingslashit( plugin_dir_url( __FILE__ ) );
+        $path = plugin_dir_path( __FILE__ );
+        $timeline = [ 'timeline-data', 'timeline-svg', 'timeline-flags', 'timeline-watch' ];
+        $deps = [];
+        foreach ( $timeline as $name ) {
+            wp_enqueue_script( 'genmapper-' . $name, $url . 'timeline/' . $name . '.js', $deps, filemtime( $path . 'timeline/' . $name . '.js' ), true );
+            $deps = [ 'genmapper-' . $name ];
+        }
+        wp_enqueue_script( 'genmapper-health-badges', $url . 'health-badges.js', [ 'd3', 'genmapper-timeline-watch' ], filemtime( $path . 'health-badges.js' ), true );
+        wp_localize_script( 'genmapper-health-badges', 'genHealthFlags', [
+            'root' => esc_url_raw( rest_url() ),
+            'nonce' => wp_create_nonce( 'wp_rest' ),
+            'watch' => DT_Genmapper_Health_Watch::settings(),
+            'strings' => array_merge( DT_Genmapper_Timeline_Chart::watch_strings(), [
+                'flags_legend' => __( 'Worth checking (hover for why; full list under Timelines)', 'disciple-tools-genmapper' ),
+            ] ),
+        ] );
+    }
+
     private function coaching_scripts() {
         $url = trailingslashit( plugin_dir_url( __FILE__ ) );
         $path = plugin_dir_path( __FILE__ );

@@ -24,6 +24,7 @@ class DT_Genmapper_Tab_General
         'dt_genmapper_show_people_count',
         'dt_genmapper_show_unmultiplied',
         'dt_genmapper_show_timeline_tile',
+        'dt_genmapper_show_health_flags',
     ];
 
 
@@ -52,6 +53,13 @@ class DT_Genmapper_Tab_General
         $show_people_count = get_option( 'dt_genmapper_show_people_count', false );
         $show_unmultiplied = get_option( 'dt_genmapper_show_unmultiplied', false );
         $show_timeline_tile = get_option( 'dt_genmapper_show_timeline_tile', false );
+        $show_health_flags = get_option( 'dt_genmapper_show_health_flags', false );
+        $watch_numbers = [];
+        foreach ( array_keys( DT_Genmapper_Health_Watch::NUMBER_OPTIONS ) as $option ) {
+            $watch_numbers[ $option ] = DT_Genmapper_Health_Watch::number( $option );
+        }
+        $watch_practices = DT_Genmapper_Health_Watch::key_practices();
+        $practice_options = DT_Genmapper_Health_Watch::practice_options();
         $connection_display = get_option( 'dt_genmapper_connection_display', 'coach' );
         $coaching_group_type = DT_Genmapper_Metrics::coaching_group_type();
         $group_type_options = DT_Genmapper_Metrics::group_type_options();
@@ -81,6 +89,8 @@ class DT_Genmapper_Tab_General
         $coaching_group_type = isset( $_POST['dt_genmapper_coaching_group_type'] ) ? sanitize_key( wp_unslash( $_POST['dt_genmapper_coaching_group_type'] ) ) : '';
         $is_known_type = array_key_exists( $coaching_group_type, DT_Genmapper_Metrics::group_type_options() );
         update_option( 'dt_genmapper_coaching_group_type', $is_known_type ? $coaching_group_type : '' );
+
+        DT_Genmapper_Health_Watch::save( $_POST );
 
         $chart_label = isset( $_POST["dt_genmapper_chart_label"] ) ? sanitize_text_field( wp_unslash( $_POST["dt_genmapper_chart_label"] ) ) : '';
         update_option( 'dt_genmapper_chart_label', mb_substr( $chart_label, 0, self::CHART_LABEL_MAX_LENGTH ) );

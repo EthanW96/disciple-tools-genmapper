@@ -19,8 +19,9 @@
      * @param {Map} stageById group id -> stages() result
      * @param {{from, to}} range visible time range (Unix seconds)
      * @param {Function} onSelect called with the group when its row is clicked
+     * @param {Function} [decorateRow] draws extra marks on a row: (row, group, rowMiddleY, clampX, tip)
      */
-    const render = (container, rows, stageById, range, strings, onSelect) => {
+    const render = (container, rows, stageById, range, strings, onSelect, decorateRow = null) => {
         container.innerHTML = '';
         if (!rows.length) {
             container.insertAdjacentHTML('beforeend', `<p class="gm-tl-note">${S.escape(strings.no_groups)}</p>`);
@@ -58,6 +59,9 @@
             (group.events || []).filter((event) => event.kind !== 'type' && event.kind !== 'status')
                 .filter((event) => event.time >= range.from && event.time <= range.to)
                 .forEach((event) => S.eventMark(row, event, x(event.time), y + ROW / 2, tip, strings));
+            if (decorateRow) {
+                decorateRow(row, group, y + ROW / 2, clampX, tip);
+            }
             row.addEventListener('click', () => onSelect(group));
             row.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' || event.key === ' ') {

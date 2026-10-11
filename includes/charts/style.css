@@ -318,6 +318,19 @@ p {
   text-anchor: middle;
 }
 
+/* Health watch badge: status amber, always with "!" and the reasons on hover */
+.node .node-flag circle {
+  fill: #fab219;
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.node .node-flag text {
+  font: bold 12px sans-serif;
+  fill: #0b0b0b;
+  stroke: none;
+}
+
 .node:hover > rect, .node:hover > line {
   fill: lightskyblue;
 }

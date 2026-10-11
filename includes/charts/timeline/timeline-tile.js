@@ -24,16 +24,23 @@
             return;
         }
         tile.innerHTML = `<p class="gm-tl-note">${S.escape(strings.loading)}</p>`;
-        fetch(`${config.root}dt/v1/genmapper/timeline?group=${groupId}`, { headers: { 'X-WP-Nonce': config.nonce } })
+        // With metrics access the whole movement loads, so flags use its pace; otherwise the default months
+        const query = config.can_view_movement ? '' : `?group=${groupId}`;
+        fetch(`${config.root}dt/v1/genmapper/timeline${query}`, { headers: { 'X-WP-Nonce': config.nonce } })
             .then((response) => response.json().then((body) => ({ ok: response.ok, body })))
             .then(({ ok, body }) => {
-                const group = ok && body && Array.isArray(body.groups) ? body.groups[0] : null;
+                const groups = ok && body && Array.isArray(body.groups) ? body.groups : [];
+                const group = groups.find((item) => item.id === groupId);
                 if (!group) {
                     throw new Error((body && body.message) || strings.load_failed);
                 }
                 const now = Math.floor(Date.now() / 1000);
-                tile.innerHTML = `<div class="gm-tl">${S.legend(strings)}<div class="gm-tl-view" id="genmapper-timeline-journey"></div></div>`;
-                window.GenMapperTimelineJourney.render(document.getElementById('genmapper-timeline-journey'), group, window.GenMapperTimelineData.stages(group, now), strings, now, { minWidth: TILE_MIN_WIDTH });
+                const data = window.GenMapperTimelineData;
+                const watch = window.GenMapperTimelineWatch;
+                const stageById = new Map(groups.map((item) => [item.id, data.stages(item, now)]));
+                const analysis = watch.analyse(groups, stageById, body.coaching_groups || [], config.watch, now, !config.can_view_movement);
+                tile.innerHTML = `<div class="gm-tl">${S.legend(strings)}<div class="gm-tl-view" id="genmapper-timeline-journey"></div>${watch.flagListHtml(analysis.flagsById.get(groupId) || [], strings, analysis.settings)}</div>`;
+                window.GenMapperTimelineJourney.render(document.getElementById('genmapper-timeline-journey'), group, stageById.get(groupId), strings, now, { minWidth: TILE_MIN_WIDTH });
                 relayoutTiles();
             })
             .catch((error) => {

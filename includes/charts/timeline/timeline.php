@@ -85,7 +85,7 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
         $this->enqueue( 'genmapper-timeline-swimlanes', 'timeline-swimlanes.js', [ 'genmapper-timeline-svg', 'genmapper-svg-text' ] );
         $this->enqueue( 'genmapper-timeline-time-to-ecclesia', 'timeline-time-to-ecclesia.js', [ 'genmapper-timeline-svg' ] );
         $this->enqueue( 'genmapper-timeline-stages', 'timeline-stages.js', [ 'genmapper-timeline-svg' ] );
-        $this->enqueue( 'genmapper-timeline-page', 'timeline-page.js', [ 'genmapper-timeline-journey', 'genmapper-timeline-swimlanes', 'genmapper-timeline-time-to-ecclesia', 'genmapper-timeline-stages' ] );
+        $this->enqueue( 'genmapper-timeline-page', 'timeline-page.js', [ 'genmapper-timeline-journey', 'genmapper-timeline-watch', 'genmapper-timeline-swimlanes', 'genmapper-timeline-time-to-ecclesia', 'genmapper-timeline-stages' ] );
     }
 
     public function tile_scripts() {
@@ -93,7 +93,7 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
             return;
         }
         $this->common_scripts();
-        $this->enqueue( 'genmapper-timeline-tile', 'timeline-tile.js', [ 'genmapper-timeline-journey' ] );
+        $this->enqueue( 'genmapper-timeline-tile', 'timeline-tile.js', [ 'genmapper-timeline-journey', 'genmapper-timeline-watch' ] );
     }
 
     private function common_scripts() {
@@ -104,16 +104,93 @@ class DT_Genmapper_Timeline_Chart extends DT_Genmapper_Metrics_Chart_Base
         $this->enqueue( 'genmapper-timeline-data', 'timeline-data.js', [] );
         $this->enqueue( 'genmapper-timeline-svg', 'timeline-svg.js', [ 'genmapper-timeline-data' ] );
         $this->enqueue( 'genmapper-timeline-journey', 'timeline-journey.js', [ 'genmapper-timeline-svg' ] );
+        $this->enqueue( 'genmapper-timeline-flags', 'timeline-flags.js', [ 'genmapper-timeline-data' ] );
+        $this->enqueue( 'genmapper-timeline-watch', 'timeline-watch.js', [ 'genmapper-timeline-svg', 'genmapper-timeline-flags' ] );
         wp_localize_script( 'genmapper-timeline-data', $this->js_object_name, [
             'root' => esc_url_raw( rest_url() ),
             'nonce' => wp_create_nonce( 'wp_rest' ),
             'chart_label' => DT_Genmapper_Metrics::chart_label(),
-            'strings' => $this->strings(),
+            'groups_url' => esc_url_raw( site_url( '/groups/' ) ),
+            'can_view_movement' => $this->has_permission(),
+            'watch' => DT_Genmapper_Health_Watch::settings(),
+            'strings' => array_merge( $this->strings(), self::watch_strings() ),
         ] );
     }
 
     private function enqueue( string $handle, string $file, array $deps ) {
         wp_enqueue_script( $handle, plugin_dir_url( __FILE__ ) . $file, $deps, filemtime( plugin_dir_path( __FILE__ ) . $file ), true );
+    }
+
+    /**
+     * Health watch wording, shared with the egg chart's flag badges.
+     *
+     * @return array
+     */
+    public static function watch_strings(): array {
+        $terms = DT_Genmapper_Metrics::dt_terms();
+        $settings = DT_Genmapper_Health_Watch::settings();
+        return [
+            'health_watch' => __( 'Health watch', 'disciple-tools-genmapper' ),
+            'watch_caption' => __( 'Groups that may need a check-in, most pressing first. These are prompts, not verdicts: open the group to see what is happening.', 'disciple-tools-genmapper' ),
+            'watch_none' => __( 'Nothing flagged for this selection.', 'disciple-tools-genmapper' ),
+            'watch_pace' => __( 'Behind the usual pace', 'disciple-tools-genmapper' ),
+            'watch_quiet' => __( 'Gone quiet', 'disciple-tools-genmapper' ),
+            'watch_health' => __( 'Health slipping', 'disciple-tools-genmapper' ),
+            'watch_data' => __( 'Data to tidy', 'disciple-tools-genmapper' ),
+            'all_groups' => __( 'All groups', 'disciple-tools-genmapper' ),
+            'flagged_only' => __( 'Flagged only', 'disciple-tools-genmapper' ),
+            'flags_title' => __( 'Worth checking', 'disciple-tools-genmapper' ),
+            'flags_note' => __( 'Prompts for a check-in, not verdicts. Thresholds are in the plugin settings.', 'disciple-tools-genmapper' ),
+            'what_to_check' => __( 'What to check', 'disciple-tools-genmapper' ),
+            'since' => __( 'Since', 'disciple-tools-genmapper' ),
+            /* translators: {count}: number of groups */
+            'show_all' => __( 'Show all {count}', 'disciple-tools-genmapper' ),
+            /* translators: {share}: a percentage */
+            'pace_summary' => __( 'Usual pace ({share}% of groups):', 'disciple-tools-genmapper' ),
+            /* translators: {milestone}: e.g. Coach; {months}: number of months */
+            'pace_item' => __( '{milestone} by {months} months', 'disciple-tools-genmapper' ),
+            /* translators: {milestone}: e.g. Coach; {months}: number of months */
+            'pace_default' => __( '{milestone} by {months} months (guide: too few groups yet)', 'disciple-tools-genmapper' ),
+            /* translators: {milestone}: e.g. Coach */
+            'pace_uncommon' => __( '{milestone}: most groups never get there, so not flagged', 'disciple-tools-genmapper' ),
+            'pace_coach' => __( 'Coach', 'disciple-tools-genmapper' ),
+            'pace_group' => $terms['group'],
+            'pace_baptism' => __( 'First baptism', 'disciple-tools-genmapper' ),
+            'pace_ecclesia' => $terms['church'],
+            'pace_multiplied' => __( 'First child group', 'disciple-tools-genmapper' ),
+            'flag_milestone_coach' => __( 'No coach yet', 'disciple-tools-genmapper' ),
+            /* translators: %s: the site's word for a pre-group */
+            'flag_milestone_group' => sprintf( __( 'Still a %s', 'disciple-tools-genmapper' ), $terms['pre_group'] ),
+            'flag_milestone_baptism' => __( 'No baptisms yet', 'disciple-tools-genmapper' ),
+            /* translators: %s: the site's word for a church, e.g. Ecclesia */
+            'flag_milestone_ecclesia' => sprintf( __( 'Not yet %s', 'disciple-tools-genmapper' ), $terms['church'] ),
+            'flag_milestone_multiplied' => __( 'Not multiplied yet', 'disciple-tools-genmapper' ),
+            /* translators: {age}: months since the group started, {share}: a percentage, {norm}: months */
+            'flag_overdue_movement' => __( '{age} months in; {share}% of groups got there by {norm} months', 'disciple-tools-genmapper' ),
+            /* translators: {age}: months since the group started, {norm}: months */
+            'flag_overdue_default' => __( '{age} months in; the usual guide is {norm} months (too few groups yet to measure your own pace)', 'disciple-tools-genmapper' ),
+            /* translators: {months}: number of months */
+            'flag_quiet' => __( 'No updates or comments for {months} months', 'disciple-tools-genmapper' ),
+            /* translators: {practice}: a Church Health practice */
+            'flag_practice_removed' => __( 'Practice no longer marked: {practice}', 'disciple-tools-genmapper' ),
+            /* translators: %s: the site's word for a church; {practices}: list of Church Health practices */
+            'flag_missing_practices' => sprintf( __( '%s without: {practices}', 'disciple-tools-genmapper' ), $terms['church'] ),
+            /* translators: {from} and {to}: member counts */
+            'flag_members_dropped' => __( 'Members down from {from} to {to}', 'disciple-tools-genmapper' ),
+            'flag_no_members' => __( 'Member Count is 0', 'disciple-tools-genmapper' ),
+            'flag_no_start_date' => __( 'No Start Date', 'disciple-tools-genmapper' ),
+            'flag_no_church_start_date' => __( 'No Church Start Date (using when the change was recorded)', 'disciple-tools-genmapper' ),
+            'flag_dates_out_of_order' => __( 'Dates out of order', 'disciple-tools-genmapper' ),
+            'coaching_load' => __( 'Coaching load', 'disciple-tools-genmapper' ),
+            /* translators: %1$d: number of groups */
+            'coaching_load_caption' => sprintf( __( 'Coaches with more than %1$d active groups, and coaching groups with more than %1$d active groups per member.', 'disciple-tools-genmapper' ), $settings['maxGroupsPerCoach'] ),
+            'coaching_load_none' => __( 'No one is over the limit.', 'disciple-tools-genmapper' ),
+            'coach' => __( 'Coach', 'disciple-tools-genmapper' ),
+            'coaching_group' => __( 'Coaching group', 'disciple-tools-genmapper' ),
+            'active_groups' => __( 'Active groups', 'disciple-tools-genmapper' ),
+            'members' => __( 'Members', 'disciple-tools-genmapper' ),
+            'groups_per_member' => __( 'Groups per member', 'disciple-tools-genmapper' ),
+        ];
     }
 
     private function strings(): array {

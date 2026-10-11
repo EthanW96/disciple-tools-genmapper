@@ -60,6 +60,21 @@
     cursor: pointer;
 }
 
+.coaching-legend__flag {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin: 0 4px 0 12px;
+    border-radius: 50%;
+    background: #fab219; /* health watch amber, as on the chart */
+    color: #0b0b0b;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    text-align: center;
+    vertical-align: middle;
+}
+
 .coaching-legend__triangle {
     display: inline-block;
     width: 0;

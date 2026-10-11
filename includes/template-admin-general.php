@@ -179,6 +179,106 @@
                     </tr>
                 </tbody>
             </table>
+            <table class="widefat striped"
+                   style="max-width: 700px; margin-bottom: 25px;">
+                <thead>
+                    <tr>
+                        <th><b><?php esc_html_e( 'Health watch', 'disciple-tools-genmapper' ) ?></b></th>
+                        <th><?php esc_html_e( 'Flags groups that may need a check-in. Flags are only shown on the charts; nothing is changed on the records.', 'disciple-tools-genmapper' ) ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <label for="genmapper-show-health-flags">
+                                <b><?php esc_html_e( 'Show health flags on the group chart?', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="dt_genmapper_show_health_flags" <?php if ($show_health_flags): ?>checked<?php endif; ?> id="genmapper-show-health-flags">
+                            <p>
+                                <?php esc_html_e( 'Adds an amber "!" beside group circles that have flags, with the reasons on hover. The full list is on the Timelines page.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="genmapper-watch-percentile">
+                                <b><?php esc_html_e( 'Behind the usual pace', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="number" name="dt_genmapper_watch_percentile" id="genmapper-watch-percentile" value="<?php echo esc_attr( $watch_numbers['dt_genmapper_watch_percentile'] ) ?>"
+                                   min="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS['dt_genmapper_watch_percentile'][1] ) ?>"
+                                   max="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS['dt_genmapper_watch_percentile'][2] ) ?>" style="width: 5em"> %
+                            <p>
+                                <?php esc_html_e( 'A group is flagged when it has not reached a milestone (a coach, baptisms, becoming an ecclesia, multiplying) by the time this share of groups in your movement had reached it.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="genmapper-watch-quiet">
+                                <b><?php esc_html_e( 'Gone quiet after', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="number" name="dt_genmapper_watch_quiet_months" id="genmapper-watch-quiet" value="<?php echo esc_attr( $watch_numbers['dt_genmapper_watch_quiet_months'] ) ?>"
+                                   min="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS['dt_genmapper_watch_quiet_months'][1] ) ?>"
+                                   max="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS['dt_genmapper_watch_quiet_months'][2] ) ?>" style="width: 5em"> <?php esc_html_e( 'months', 'disciple-tools-genmapper' ) ?>
+                            <p>
+                                <?php esc_html_e( 'Flags active groups with no updates or comments for this long.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="genmapper-watch-member-drop">
+                                <b><?php esc_html_e( 'Member count drop', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="number" name="dt_genmapper_watch_member_drop" id="genmapper-watch-member-drop" value="<?php echo esc_attr( $watch_numbers['dt_genmapper_watch_member_drop'] ) ?>"
+                                   min="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS['dt_genmapper_watch_member_drop'][1] ) ?>"
+                                   max="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS['dt_genmapper_watch_member_drop'][2] ) ?>" style="width: 5em"> %
+                            <p>
+                                <?php esc_html_e( 'Flags groups whose Member Count fell this much below its highest in the last 12 months.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="genmapper-watch-coach-load">
+                                <b><?php esc_html_e( 'Groups per coach', 'disciple-tools-genmapper' )?></b>
+                            </label>
+                        </td>
+                        <td>
+                            <input type="number" name="dt_genmapper_watch_coach_load" id="genmapper-watch-coach-load" value="<?php echo esc_attr( $watch_numbers['dt_genmapper_watch_coach_load'] ) ?>"
+                                   min="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS['dt_genmapper_watch_coach_load'][1] ) ?>"
+                                   max="<?php echo esc_attr( DT_Genmapper_Health_Watch::NUMBER_OPTIONS['dt_genmapper_watch_coach_load'][2] ) ?>" style="width: 5em"> 
+                            <p>
+                                <?php esc_html_e( 'Lists coaches (and coaching groups, per member) with more active groups than this.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <b><?php esc_html_e( 'Key practices', 'disciple-tools-genmapper' )?></b>
+                        </td>
+                        <td>
+                            <?php foreach ( $practice_options as $practice_key => $practice_label ) : ?>
+                                <label style="display: inline-block; margin-right: 12px">
+                                    <input type="checkbox" name="dt_genmapper_watch_key_practices[]" value="<?php echo esc_attr( $practice_key ) ?>" <?php checked( in_array( $practice_key, $watch_practices, true ) ); ?>>
+                                    <?php echo esc_html( $practice_label ) ?>
+                                </label>
+                            <?php endforeach; ?>
+                            <p>
+                                <?php esc_html_e( 'Flags an ecclesia that does not have all of these Church Health practices marked.', 'disciple-tools-genmapper' ) ?>
+                            </p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
             <input class="button hollow" type="submit" value="Save" />
         </form>
     </div><!-- end post-body-content -->
