@@ -275,6 +275,42 @@ class DT_Genmapper_Plugin_Queries
         ];
     }
 
+    /**
+     * Generation number for every group: groups under the source (parent 0) are generation 1.
+     *
+     * @param array $groups tree rows keyed by id, each with a parent_id
+     * @return array generation number keyed by group id
+     */
+    public function generations( array $groups ): array {
+        $parents = [];
+        foreach ( $groups as $group ) {
+            $parents[ $group['id'] ] = $group['parent_id'] ?? 0;
+        }
+        $max_depth = count( $parents );
+
+        $generations = [];
+        foreach ( array_keys( $parents ) as $id ) {
+            $generations[ $id ] = $this->generation_of( $id, $parents, $generations, $max_depth );
+        }
+        return $generations;
+    }
+
+    /**
+     * Walk up the parent chain until the source node or a group whose generation is already known.
+     */
+    private function generation_of( $id, array $parents, array $known, int $max_depth ): int {
+        $depth = 0;
+        $current = $id;
+        while ( !empty( $current ) && isset( $parents[ $current ] ) && $depth < $max_depth ) {
+            if ( isset( $known[ $current ] ) ) {
+                return $depth + $known[ $current ];
+            }
+            $depth++;
+            $current = $parents[ $current ];
+        }
+        return max( $depth, 1 );
+    }
+
     private function query_error( string $method, string $error ) {
         error_log( "Genmapper $method query failed: $error" ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         return new WP_Error( $method, __( 'Could not load coaching groups.', 'disciple-tools-genmapper' ), [ 'status' => 500 ] );

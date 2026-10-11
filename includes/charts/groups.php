@@ -118,31 +118,6 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
     }
 
     /**
-     * Terms as named in this site's D.T settings (e.g. "Church" may be renamed "Ecclesia"),
-     * so printed pages use the site's own words.
-     *
-     * @param array $group_fields field settings for the groups post type
-     * @return array
-     */
-    private function dt_terms( array $group_fields ): array {
-        $types = $group_fields['group_type']['default'] ?? [];
-        $statuses = $group_fields['group_status']['default'] ?? [];
-        $other_types = array_map(
-            function ( $type ) {
-                return $type['label'] ?? '';
-            },
-            array_diff_key( $types, [ 'church' => true ] )
-        );
-        return [
-            'groups' => DT_Posts::get_label_for_post_type( 'groups' ),
-            'church' => $types['church']['label'] ?? __( 'Church', 'disciple-tools-genmapper' ),
-            'other_types' => implode( ' / ', array_filter( $other_types ) ),
-            'active' => $statuses['active']['label'] ?? __( 'Active', 'disciple-tools-genmapper' ),
-            'inactive' => $statuses['inactive']['label'] ?? __( 'Inactive', 'disciple-tools-genmapper' ),
-        ];
-    }
-
-    /**
      * Shared SVG text helpers and the coaching group layout/shapes (Groups chart only)
      */
     private function coaching_scripts() {
@@ -159,7 +134,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
      * @param array $group_fields field settings for the groups post type
      */
     private function print_pack_scripts( array $group_fields ) {
-        $terms = $this->dt_terms( $group_fields );
+        $terms = DT_Genmapper_Metrics::dt_terms();
         $dir = trailingslashit( plugin_dir_url( __FILE__ ) ) . 'print-pack/';
         $path = plugin_dir_path( __FILE__ ) . 'print-pack/';
 
@@ -252,7 +227,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         }
 
         // Generations come from the full tree so a rebased view keeps real numbers.
-        $generations = $this->get_generations( $groups );
+        $generations = dt_genmapper_plugin_queries()->generations( $groups );
 
         if ( !empty( $params["node"] && $params["node"] != "null" )) {
             $node = [];
@@ -363,41 +338,5 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 ];
             }, $coaching_ids ) ) );
         }, $result['coverage'] );
-    }
-
-    /**
-     * Generation number for every group: groups under the source (parent 0) are generation 1.
-     *
-     * @param array $groups tree rows keyed by id, each with a parent_id
-     * @return array generation number keyed by group id
-     */
-    private function get_generations( array $groups ): array {
-        $parents = [];
-        foreach ( $groups as $group ) {
-            $parents[ $group['id'] ] = $group['parent_id'] ?? 0;
-        }
-        $max_depth = count( $parents );
-
-        $generations = [];
-        foreach ( array_keys( $parents ) as $id ) {
-            $generations[ $id ] = $this->get_generation( $id, $parents, $generations, $max_depth );
-        }
-        return $generations;
-    }
-
-    /**
-     * Walk up the parent chain until the source node or a group whose generation is already known.
-     */
-    private function get_generation( $id, array $parents, array $known, int $max_depth ): int {
-        $depth = 0;
-        $current = $id;
-        while ( !empty( $current ) && isset( $parents[ $current ] ) && $depth < $max_depth ) {
-            if ( isset( $known[ $current ] ) ) {
-                return $depth + $known[ $current ];
-            }
-            $depth++;
-            $current = $parents[ $current ];
-        }
-        return max( $depth, 1 );
     }
 }

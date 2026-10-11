@@ -121,6 +121,33 @@ class DT_Genmapper_Metrics {
     }
 
     /**
+     * Terms as named in this site's D.T settings (e.g. "Church" may be renamed "Ecclesia"),
+     * so charts and printed pages use the site's own words.
+     *
+     * @return array groups, church, group, pre_group, other_types, active, inactive
+     */
+    public static function dt_terms() {
+        $fields = DT_Posts::get_post_field_settings( 'groups' );
+        $types = $fields['group_type']['default'] ?? [];
+        $statuses = $fields['group_status']['default'] ?? [];
+        $other_types = array_map(
+            function ( $type ) {
+                return $type['label'] ?? '';
+            },
+            array_diff_key( $types, [ 'church' => true ] )
+        );
+        return [
+            'groups' => DT_Posts::get_label_for_post_type( 'groups' ),
+            'church' => $types['church']['label'] ?? __( 'Church', 'disciple-tools-genmapper' ),
+            'group' => $types['group']['label'] ?? __( 'Group', 'disciple-tools-genmapper' ),
+            'pre_group' => $types['pre-group']['label'] ?? __( 'Pre-Group', 'disciple-tools-genmapper' ),
+            'other_types' => implode( ' / ', array_filter( $other_types ) ),
+            'active' => $statuses['active']['label'] ?? __( 'Active', 'disciple-tools-genmapper' ),
+            'inactive' => $statuses['inactive']['label'] ?? __( 'Inactive', 'disciple-tools-genmapper' ),
+        ];
+    }
+
+    /**
      * The Group Type used for coaching groups, or '' when coaching groups are off
      * (also when the saved type no longer exists on the site).
      *
