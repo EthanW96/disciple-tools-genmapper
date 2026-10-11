@@ -4,22 +4,21 @@
 (function () {
     'use strict';
 
-    const PALETTE = ['#d1495b', '#3d85c6', '#2a9d8f', '#e0912f', '#8e5bb5', '#5c946e', '#c06c84', '#4a6fa5'];
+    // Coaching motif across the charts: a red triangle (same red as --gm-tl-coach in timeline/timeline.css)
+    const COACHING_RED = '#e34948';
     const ROOT_ID = 0;
 
     const key = (id) => String(id);
     const coachingOf = (row) => (row && !row.spacer && Array.isArray(row.coaching) ? row.coaching : []);
 
-    // Every coaching group on the chart with a stable colour (sorted by name)
+    // Every coaching group on the chart (sorted by name), all in the coaching red
     const coachingGroups = (rows) => {
         const byId = new Map();
         rows.forEach((row) => coachingOf(row).forEach((group) => byId.set(key(group.id), group)));
         return Array.from(byId.values())
             .sort((a, b) => String(a.name).localeCompare(String(b.name)) || a.id - b.id)
-            .map((group, index) => ({ ...group, color: PALETTE[index % PALETTE.length] }));
+            .map((group) => ({ ...group, color: COACHING_RED }));
     };
-
-    const colorMap = (rows) => new Map(coachingGroups(rows).map((group) => [key(group.id), group.color]));
 
     const childrenByParent = (rows) => {
         const map = new Map();
@@ -163,5 +162,5 @@
         return base.every((row) => placed.has(key(row.id))) ? ordered : rows;
     };
 
-    window.GenMapperCoachingLayout = { decorate, coachingGroups, colorMap };
+    window.GenMapperCoachingLayout = { decorate, coachingGroups, COACHING_RED };
 })();
