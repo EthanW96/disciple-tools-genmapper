@@ -33,6 +33,10 @@ class DT_Genmapper_Plugin_Queries
         $connection_display = get_option( 'dt_genmapper_connection_display', 'coach' );
         $connection_type = $connection_display === 'leaders' ? 'groups_to_leaders' : 'groups_to_coaches';
 
+        // By default only top-level groups that have child groups start a tree.
+        // With include_unmultiplied, top-level groups without children are shown too.
+        $include_unmultiplied = empty( $args['include_unmultiplied'] ) ? 0 : 1;
+
         switch ($query_name) {
             case 'multiplying_groups_only':
                 $query = $wpdb->get_results( $wpdb->prepare("
@@ -67,7 +71,8 @@ class DT_Genmapper_Plugin_Queries
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metriccommunion1 WHERE metriccommunion1.post_id = a.ID AND metriccommunion1.meta_key = 'health_metrics' AND metriccommunion1.meta_value = 'church_communion')) as health_metrics_communion,
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metricgiving1 WHERE metricgiving1.post_id = a.ID AND metricgiving1.meta_key = 'health_metrics' AND metricgiving1.meta_value = 'church_giving')) as health_metrics_giving,
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metricprayer1 WHERE metricprayer1.post_id = a.ID AND metricprayer1.meta_key = 'health_metrics' AND metricprayer1.meta_value = 'church_prayer')) as health_metrics_prayer,
-                      (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metriccommitment1 WHERE metriccommitment1.post_id = a.ID AND metriccommitment1.meta_key = 'health_metrics' AND metriccommitment1.meta_value = 'church_commitment')) as health_metrics_commitment
+                      (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as metriccommitment1 WHERE metriccommitment1.post_id = a.ID AND metriccommitment1.meta_key = 'health_metrics' AND metriccommitment1.meta_value = 'church_commitment')) as health_metrics_commitment,
+                      (SELECT EXISTS (SELECT 1 FROM $wpdb->p2p as coached1 WHERE coached1.p2p_from = a.ID AND coached1.p2p_type = 'groups_to_coaches')) as has_coach
                     FROM $wpdb->posts as a
                     LEFT JOIN $wpdb->postmeta as members1
                       ON members1.post_id=a.ID
@@ -106,12 +111,12 @@ class DT_Genmapper_Plugin_Queries
                       WHERE p2p_type = 'groups_to_groups'
                       GROUP BY p2p_from
                     )
-                      AND a.ID IN (
+                    AND ( %d = 1 OR a.ID IN (
                       SELECT DISTINCT (p2p_to)
                       FROM $wpdb->p2p
                       WHERE p2p_type = 'groups_to_groups'
                       GROUP BY p2p_to
-                    )
+                    ) )
                     UNION
                     SELECT
                       p.p2p_from  as id,
@@ -143,7 +148,8 @@ class DT_Genmapper_Plugin_Queries
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetriccommunion1 WHERE gmetriccommunion1.post_id = p.p2p_from AND gmetriccommunion1.meta_key = 'health_metrics' AND gmetriccommunion1.meta_value = 'church_communion')) as health_metrics_communion,
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetricgiving1 WHERE gmetricgiving1.post_id = p.p2p_from AND gmetricgiving1.meta_key = 'health_metrics' AND gmetricgiving1.meta_value = 'church_giving')) as health_metrics_giving,
                       (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetricprayer1 WHERE gmetricprayer1.post_id = p.p2p_from AND gmetricprayer1.meta_key = 'health_metrics' AND gmetricprayer1.meta_value = 'church_prayer')) as health_metrics_prayer,
-                      (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetriccommitment1 WHERE gmetriccommitment1.post_id = p.p2p_from AND gmetriccommitment1.meta_key = 'health_metrics' AND gmetriccommitment1.meta_value = 'church_commitment')) as health_metrics_commitment
+                      (SELECT EXISTS (SELECT 1 FROM $wpdb->postmeta as gmetriccommitment1 WHERE gmetriccommitment1.post_id = p.p2p_from AND gmetriccommitment1.meta_key = 'health_metrics' AND gmetriccommitment1.meta_value = 'church_commitment')) as health_metrics_commitment,
+                      (SELECT EXISTS (SELECT 1 FROM $wpdb->p2p as coached1 WHERE coached1.p2p_from = p.p2p_from AND coached1.p2p_type = 'groups_to_coaches')) as has_coach
                     FROM $wpdb->p2p as p
                     LEFT JOIN $wpdb->postmeta as gmembers1
                       ON gmembers1.post_id=p.p2p_from
@@ -169,7 +175,7 @@ class DT_Genmapper_Plugin_Queries
                       ON genddate1.post_id=p.p2p_from
                       AND genddate1.meta_key = 'end_date'
                     WHERE p.p2p_type = 'groups_to_groups'
-                ", $connection_type, $connection_type ), ARRAY_A);
+                ", $connection_type, $include_unmultiplied, $connection_type ), ARRAY_A);
                 break;
 
             default:
@@ -182,7 +188,132 @@ class DT_Genmapper_Plugin_Queries
             $list[$q['id']] = $q;
         }
 
+        if ( !empty( $args['exclude_group_type'] ) ) {
+            $list = $this->without_group_type( $list, $args['exclude_group_type'] );
+        }
+
         return dt_queries()->check_tree_health( $list );
+    }
+
+    /**
+     * Remove groups of one type (e.g. coaching groups) from the tree; their child groups move to the top level.
+     *
+     * @param array $list tree rows keyed by id
+     * @param string $group_type group type key to remove
+     * @return array
+     */
+    private function without_group_type( array $list, string $group_type ): array {
+        $removed = array_keys( array_filter( $list, function ( $row ) use ( $group_type ) {
+            return ( $row['group_type'] ?? '' ) === $group_type;
+        } ) );
+        $kept = array_diff_key( $list, array_flip( $removed ) );
+        return array_map( function ( $row ) use ( $removed ) {
+            return in_array( $row['parent_id'], $removed, false ) ? array_merge( $row, [ 'parent_id' => 0 ] ) : $row;
+        }, $kept );
+    }
+
+    /**
+     * Which coaching groups cover which groups: a group is covered by every coaching group
+     * that has one of the group's coaches as a member.
+     *
+     * @param string $coaching_type group type key used for coaching groups
+     * @return array|WP_Error [ 'coaching_groups' => id => [id, name, members], 'coverage' => group id => [coaching ids] ]
+     */
+    public function coaching_coverage( string $coaching_type ) {
+        global $wpdb;
+
+        $member_rows = $wpdb->get_results( $wpdb->prepare( "
+            SELECT g.ID as group_id, g.post_title as group_name, c.ID as contact_id, c.post_title as contact_name
+            FROM $wpdb->posts as g
+            INNER JOIN $wpdb->postmeta as t
+              ON t.post_id = g.ID AND t.meta_key = 'group_type' AND t.meta_value = %s
+            LEFT JOIN $wpdb->p2p as m
+              ON m.p2p_to = g.ID AND m.p2p_type = 'contacts_to_groups'
+            LEFT JOIN $wpdb->posts as c
+              ON c.ID = m.p2p_from
+            WHERE g.post_type = 'groups'
+              AND g.post_status = 'publish'
+            ORDER BY g.post_title, c.post_title
+        ", $coaching_type ), ARRAY_A );
+        if ( $wpdb->last_error ) {
+            return $this->query_error( __METHOD__, $wpdb->last_error );
+        }
+
+        $coach_rows = $wpdb->get_results( "
+            SELECT p2p_from as group_id, p2p_to as contact_id
+            FROM $wpdb->p2p
+            WHERE p2p_type = 'groups_to_coaches'
+        ", ARRAY_A );
+        if ( $wpdb->last_error ) {
+            return $this->query_error( __METHOD__, $wpdb->last_error );
+        }
+
+        $coaching_groups = [];
+        $coaching_by_contact = [];
+        foreach ( $member_rows as $row ) {
+            $id = (int) $row['group_id'];
+            $coaching_groups[ $id ] = $coaching_groups[ $id ] ?? [ 'id' => $id, 'name' => $row['group_name'], 'members' => [] ];
+            if ( !empty( $row['contact_id'] ) ) {
+                $coaching_groups[ $id ]['members'][] = $row['contact_name'];
+                $coaching_by_contact[ (int) $row['contact_id'] ][] = $id;
+            }
+        }
+
+        $coverage = [];
+        foreach ( $coach_rows as $row ) {
+            $group_id = (int) $row['group_id'];
+            foreach ( $coaching_by_contact[ (int) $row['contact_id'] ] ?? [] as $coaching_id ) {
+                if ( $coaching_id !== $group_id ) {
+                    $coverage[ $group_id ][ $coaching_id ] = $coaching_id;
+                }
+            }
+        }
+
+        return [
+            'coaching_groups' => $coaching_groups,
+            'coverage' => array_map( 'array_values', $coverage ),
+        ];
+    }
+
+    /**
+     * Generation number for every group: groups under the source (parent 0) are generation 1.
+     *
+     * @param array $groups tree rows keyed by id, each with a parent_id
+     * @return array generation number keyed by group id
+     */
+    public function generations( array $groups ): array {
+        $parents = [];
+        foreach ( $groups as $group ) {
+            $parents[ $group['id'] ] = $group['parent_id'] ?? 0;
+        }
+        $max_depth = count( $parents );
+
+        $generations = [];
+        foreach ( array_keys( $parents ) as $id ) {
+            $generations[ $id ] = $this->generation_of( $id, $parents, $generations, $max_depth );
+        }
+        return $generations;
+    }
+
+    /**
+     * Walk up the parent chain until the source node or a group whose generation is already known.
+     */
+    private function generation_of( $id, array $parents, array $known, int $max_depth ): int {
+        $depth = 0;
+        $current = $id;
+        while ( !empty( $current ) && isset( $parents[ $current ] ) && $depth < $max_depth ) {
+            if ( isset( $known[ $current ] ) ) {
+                return $depth + $known[ $current ];
+            }
+            $depth++;
+            $current = $parents[ $current ];
+        }
+        return max( $depth, 1 );
+    }
+
+    private function query_error( string $method, string $error ) {
+        error_log( "Genmapper $method query failed: $error" ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        return new WP_Error( $method, __( 'Could not load coaching groups.', 'disciple-tools-genmapper' ), [ 'status' => 500 ] );
     }
 }
 

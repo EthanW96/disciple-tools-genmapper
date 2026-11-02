@@ -48,6 +48,10 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'group_fields' => $group_fields,
                 'show_metrics' => get_option( "dt_genmapper_show_health_metrics", false ),
                 'show_icons' => get_option( "dt_genmapper_show_health_icons", true ),
+                'show_coaching' => get_option( "dt_genmapper_show_coaching", false ),
+                'show_generation' => get_option( "dt_genmapper_show_generation", false ),
+                'show_people_count' => get_option( "dt_genmapper_show_people_count", false ),
+                'coaching_enabled' => DT_Genmapper_Metrics::coaching_group_type() !== '',
             ]
         );
 
@@ -85,7 +89,9 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         );
 
         // Enqueue GenMapperPoster before genmapper
+        wp_enqueue_script( 'genmapper-print-frame', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'print-frame.js', [], filemtime( plugin_dir_path( __FILE__ ) . 'print-frame.js' ), true );
         wp_enqueue_script('genmapper-poster', trailingslashit( plugin_dir_url( __FILE__ ) ) . "genmapper-poster.js", [
+            'genmapper-print-frame',
             'jquery',
             'd3'
         ], filemtime( plugin_dir_path( __FILE__ ) . "genmapper-poster.js" ), true);
@@ -103,14 +109,23 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
             'genmapper', 'genApiTemplate', [
                 'show_metrics' => get_option( "dt_genmapper_show_health_metrics", false ),
                 'show_icons' => get_option( "dt_genmapper_show_health_icons", true ),
+                'show_coaching' => get_option( "dt_genmapper_show_coaching", false ),
+                'show_generation' => get_option( "dt_genmapper_show_generation", false ),
+                'show_people_count' => get_option( "dt_genmapper_show_people_count", false ),
+                'coaching_enabled' => DT_Genmapper_Metrics::coaching_group_type() !== '',
             ]
         );
+        $this->coaching_scripts();
         wp_enqueue_script('dt_' . $this->slug . '_script', trailingslashit( plugin_dir_url( __FILE__ ) ) . $this->js_file_name, [
             'jquery',
             'jquery-ui-core',
             'genmapper',
-            'wp-i18n'
+            'wp-i18n',
+            'genmapper-coaching-shapes',
         ], filemtime( plugin_dir_path( __FILE__ ) . $this->js_file_name ), true);
+
+        $this->print_pack_scripts( $group_fields );
+        $this->health_flag_scripts();
 
         // Localize script with array data
         wp_localize_script(
@@ -123,13 +138,107 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'current_user_id' => get_current_user_id(),
                 'spinner' => '<img src="' . trailingslashit( plugin_dir_url( __DIR__ ) ) . 'ajax-loader.gif" style="height:1em;" />',
                 'translation' => [
-                    'string1' => __( 'Group Generation Tree', 'disciple-tools-genmapper' ),
-                    'string2' => __( 'This tree only shows First Generation groups that have multiplied.', 'disciple-tools-genmapper' ),
+                    'string1' => DT_Genmapper_Metrics::chart_label(), // chart label setting, e.g. "Egg Chart"
+                    'string2' => get_option( 'dt_genmapper_show_unmultiplied', false )
+                        ? __( 'This tree shows all groups. Groups without a parent group start a new tree.', 'disciple-tools-genmapper' )
+                        : __( 'This tree only shows First Generation groups that have multiplied.', 'disciple-tools-genmapper' ),
                     'string3' => __( 'See descendants of a specific group', 'disciple-tools-genmapper' ),
                     'string4' => __( 'Reset', 'disciple-tools-genmapper' ),
+                    'coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
+                    'not_coached' => __( 'No coach', 'disciple-tools-genmapper' ),
+                    /* translators: %s: the site's label for the coaching group type, e.g. Team */
+                    'coaching_legend' => sprintf( __( '%s: encloses the groups it coaches', 'disciple-tools-genmapper' ), $this->coaching_type_label() ),
                 ]
             ]
         );
+    }
+
+    /**
+     * Shared SVG text helpers and the coaching group layout/shapes (Groups chart only)
+     */
+    // Health watch badges on the circles, when that setting is on (they reuse the timeline scripts)
+    private function health_flag_scripts() {
+        if ( !get_option( 'dt_genmapper_show_health_flags', false ) ) {
+            return;
+        }
+        $url = trailingslashit( plugin_dir_url( __FILE__ ) );
+        $path = plugin_dir_path( __FILE__ );
+        $timeline = [ 'timeline-data', 'timeline-svg', 'timeline-flags', 'timeline-watch' ];
+        $deps = [];
+        foreach ( $timeline as $name ) {
+            wp_enqueue_script( 'genmapper-' . $name, $url . 'timeline/' . $name . '.js', $deps, filemtime( $path . 'timeline/' . $name . '.js' ), true );
+            $deps = [ 'genmapper-' . $name ];
+        }
+        wp_enqueue_script( 'genmapper-health-badges', $url . 'health-badges.js', [ 'd3', 'genmapper-timeline-watch' ], filemtime( $path . 'health-badges.js' ), true );
+        wp_localize_script( 'genmapper-health-badges', 'genHealthFlags', [
+            'root' => esc_url_raw( rest_url() ),
+            'nonce' => wp_create_nonce( 'wp_rest' ),
+            'watch' => DT_Genmapper_Health_Watch::settings(),
+            'strings' => array_merge( DT_Genmapper_Timeline_Chart::watch_strings(), [
+                'flags_legend' => __( 'Worth checking (hover for why; full list under Timelines)', 'disciple-tools-genmapper' ),
+            ] ),
+        ] );
+    }
+
+    private function coaching_scripts() {
+        $url = trailingslashit( plugin_dir_url( __FILE__ ) );
+        $path = plugin_dir_path( __FILE__ );
+        wp_enqueue_script( 'genmapper-svg-text', $url . 'svg-text.js', [], filemtime( $path . 'svg-text.js' ), true );
+        wp_enqueue_script( 'genmapper-coaching-layout', $url . 'coaching/coaching-layout.js', [], filemtime( $path . 'coaching/coaching-layout.js' ), true );
+        wp_enqueue_script( 'genmapper-coaching-shapes', $url . 'coaching/coaching-shapes.js', [ 'genmapper-svg-text', 'genmapper-coaching-layout', 'gen-template' ], filemtime( $path . 'coaching/coaching-shapes.js' ), true );
+    }
+
+    /**
+     * Print pack (one-page overview + a page per first-generation tree) for the Groups chart
+     *
+     * @param array $group_fields field settings for the groups post type
+     */
+    private function print_pack_scripts( array $group_fields ) {
+        $terms = DT_Genmapper_Metrics::dt_terms();
+        $dir = trailingslashit( plugin_dir_url( __FILE__ ) ) . 'print-pack/';
+        $path = plugin_dir_path( __FILE__ ) . 'print-pack/';
+
+        wp_enqueue_style( 'genmapper-print-pack', $dir . 'print-pack.css', [], filemtime( $path . 'print-pack.css' ) );
+        wp_enqueue_script( 'genmapper-print-pack-common', $dir . 'print-pack-common.js', [ 'genmapper', 'genmapper-svg-text', 'genmapper-coaching-shapes' ], filemtime( $path . 'print-pack-common.js' ), true );
+        wp_enqueue_script( 'genmapper-print-pack-overview', $dir . 'print-pack-overview.js', [ 'genmapper-print-pack-common' ], filemtime( $path . 'print-pack-overview.js' ), true );
+        wp_enqueue_script( 'genmapper-print-pack-tree-pages', $dir . 'print-pack-tree-pages.js', [ 'genmapper-print-pack-common', 'd3' ], filemtime( $path . 'print-pack-tree-pages.js' ), true );
+        wp_enqueue_script( 'genmapper-print-pack', $dir . 'print-pack.js', [ 'genmapper-print-pack-overview', 'genmapper-print-pack-tree-pages', 'genmapper-poster' ], filemtime( $path . 'print-pack.js' ), true );
+
+        wp_localize_script( 'genmapper-print-pack-common', 'genPrintPack', [
+            'translations' => [
+                'chart_label' => DT_Genmapper_Metrics::chart_label(),
+                'print_title' => __( 'Print', 'disciple-tools-genmapper' ),
+                'overview_title' => __( 'Overview', 'disciple-tools-genmapper' ),
+                /* translators: %s: the site's name for groups (plural), e.g. Groups */
+                'overview_subtitle' => sprintf( __( '%s by generation. Each row shows the name and the leader.', 'disciple-tools-genmapper' ), $terms['groups'] ),
+                'printed' => __( 'Printed', 'disciple-tools-genmapper' ),
+                'printed_date' => date_i18n( get_option( 'date_format' ) ),
+                'gen_prefix' => __( 'Gen', 'disciple-tools-genmapper' ),
+                'legend_church' => $terms['church'],
+                'legend_group' => $terms['other_types'],
+                'legend_inactive' => $terms['inactive'],
+                'legend_coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
+                'legend_people' => $group_fields['member_count']['name'] ?? __( 'Member Count', 'disciple-tools-genmapper' ),
+                'stat_groups' => $terms['groups'],
+                'stat_active' => $terms['active'],
+                'paper' => __( 'Paper', 'disciple-tools-genmapper' ),
+                'orientation' => __( 'Orientation', 'disciple-tools-genmapper' ),
+                'landscape' => __( 'Landscape', 'disciple-tools-genmapper' ),
+                'portrait' => __( 'Portrait', 'disciple-tools-genmapper' ),
+                /* translators: %s: the site's name for groups (plural), e.g. Groups */
+                'include_overview' => sprintf( __( 'One-page overview of all %s', 'disciple-tools-genmapper' ), $terms['groups'] ),
+                'include_trees' => __( 'A detailed page for each first-generation tree', 'disciple-tools-genmapper' ),
+                'names_about' => __( 'Names print at about', 'disciple-tools-genmapper' ),
+                'small_text_trees' => __( 'Small text on:', 'disciple-tools-genmapper' ),
+                'small_text_hint' => __( 'try A3 or larger paper', 'disciple-tools-genmapper' ),
+                'print' => __( 'Print', 'disciple-tools-genmapper' ),
+                'cancel' => __( 'Cancel', 'disciple-tools-genmapper' ),
+                'classic_poster' => __( 'Classic large poster', 'disciple-tools-genmapper' ),
+                /* translators: %s: the site's name for groups (plural), e.g. Groups */
+                'nothing_to_print' => sprintf( __( 'There is nothing on the chart to print (%s).', 'disciple-tools-genmapper' ), $terms['groups'] ),
+                'print_failed' => __( 'The print window could not be opened. Please try again.', 'disciple-tools-genmapper' ),
+            ],
+        ] );
     }
 
     //${localizedObject.translation.string /**/}
@@ -268,10 +377,21 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 "name" => "source"
             ]
         ];
-        $groups = dt_genmapper_plugin_queries()->tree( 'multiplying_groups_only' );
+        $coaching_type = DT_Genmapper_Metrics::coaching_group_type();
+        $groups = dt_genmapper_plugin_queries()->tree( 'multiplying_groups_only', [
+            'include_unmultiplied' => (bool) get_option( 'dt_genmapper_show_unmultiplied', false ),
+            'exclude_group_type' => $coaching_type,
+        ] );
         if (is_wp_error( $groups )) {
             return $groups;
         }
+        $coaching = $this->coaching_by_group( $coaching_type );
+        if ( is_wp_error( $coaching ) ) {
+            return $coaching;
+        }
+
+        // Generations come from the full tree so a rebased view keeps real numbers.
+        $generations = dt_genmapper_plugin_queries()->generations( $groups );
 
         if ( !empty( $params["node"] && $params["node"] != "null" )) {
             $node = [];
@@ -316,10 +436,16 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 "group_type" => $group["group_type"],
                 "post_type" => "groups",
                 "coach" => $group["coach"],
+                "coached" => !empty( $group['has_coach'] ),
+                "coaching" => $coaching[ (int) ( $group['id'] ?? 0 ) ] ?? [],
+                /* translators: %d: generation number of the group, 1 = first generation */
+                "generation_label" => sprintf( __( 'Gen %d', 'disciple-tools-genmapper' ), $generations[ $group['id'] ] ?? 1 ),
+                "generation" => $generations[ $group['id'] ] ?? 1,
                 "location" => $location_display,
                 "start_date" => $group['start_date'] ? gmdate( get_option( 'date_format' ), strtotime( $group['start_date'] ) ) : null,
                 "start_date_timestamp" => $group['start_date'] ? ( is_numeric( $group['start_date'] ) ? (int) $group['start_date'] : (int) strtotime( $group['start_date'] ) ) : null,
                 "attenders" => (int) $group['total_members'],
+                "people_count" => (int) $group['total_members'],
                 "believers" => (int) $group['total_believers'],
                 "baptized" => (int) $group['total_baptized'],
                 "newlyBaptized" => (int) $group['total_baptized_by_group'],
@@ -342,5 +468,40 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         } else {
             return $prepared_array;
         }
+    }
+
+    private function coaching_type_label(): string {
+        $type = DT_Genmapper_Metrics::coaching_group_type();
+        return $type === '' ? '' : ( DT_Genmapper_Metrics::group_type_options()[ $type ] ?? $type );
+    }
+
+    /**
+     * Coaching groups covering each group: group id => [ [id, name, members], ... ]
+     *
+     * @param string $coaching_type group type key for coaching groups ('' = off)
+     * @return array|WP_Error
+     */
+    private function coaching_by_group( string $coaching_type ) {
+        if ( $coaching_type === '' ) {
+            return [];
+        }
+        $result = dt_genmapper_plugin_queries()->coaching_coverage( $coaching_type );
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+        $coaching_groups = $result['coaching_groups'];
+        return array_map( function ( $coaching_ids ) use ( $coaching_groups ) {
+            return array_values( array_filter( array_map( function ( $id ) use ( $coaching_groups ) {
+                if ( !isset( $coaching_groups[ $id ] ) ) {
+                    return null;
+                }
+                $coaching_group = $coaching_groups[ $id ];
+                return [
+                    'id' => $coaching_group['id'],
+                    'name' => $coaching_group['name'],
+                    'members' => implode( ', ', $coaching_group['members'] ),
+                ];
+            }, $coaching_ids ) ) );
+        }, $result['coverage'] );
     }
 }

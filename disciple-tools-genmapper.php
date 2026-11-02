@@ -97,6 +97,67 @@ class DT_Genmapper_Metrics {
         return plugin_dir_url( __FILE__ );
     }
 
+    /**
+     * Display label for the charts (metrics menu, admin menu, print titles).
+     * Configurable in the plugin's admin settings; falls back to "Gen Mapper".
+     *
+     * @return string
+     */
+    public static function chart_label() {
+        $label = trim( (string) get_option( 'dt_genmapper_chart_label', '' ) );
+        return $label !== '' ? $label : __( 'Gen Mapper', 'disciple-tools-genmapper' );
+    }
+
+    /**
+     * Group Type options on this site (key => label), as named in the D.T settings.
+     *
+     * @return array
+     */
+    public static function group_type_options() {
+        $fields = DT_Posts::get_post_field_settings( 'groups' );
+        return array_map( function ( $option ) {
+            return $option['label'] ?? '';
+        }, $fields['group_type']['default'] ?? [] );
+    }
+
+    /**
+     * Terms as named in this site's D.T settings (e.g. "Church" may be renamed "Ecclesia"),
+     * so charts and printed pages use the site's own words.
+     *
+     * @return array groups, church, group, pre_group, other_types, active, inactive
+     */
+    public static function dt_terms() {
+        $fields = DT_Posts::get_post_field_settings( 'groups' );
+        $types = $fields['group_type']['default'] ?? [];
+        $statuses = $fields['group_status']['default'] ?? [];
+        $other_types = array_map(
+            function ( $type ) {
+                return $type['label'] ?? '';
+            },
+            array_diff_key( $types, [ 'church' => true ] )
+        );
+        return [
+            'groups' => DT_Posts::get_label_for_post_type( 'groups' ),
+            'church' => $types['church']['label'] ?? __( 'Church', 'disciple-tools-genmapper' ),
+            'group' => $types['group']['label'] ?? __( 'Group', 'disciple-tools-genmapper' ),
+            'pre_group' => $types['pre-group']['label'] ?? __( 'Pre-Group', 'disciple-tools-genmapper' ),
+            'other_types' => implode( ' / ', array_filter( $other_types ) ),
+            'active' => $statuses['active']['label'] ?? __( 'Active', 'disciple-tools-genmapper' ),
+            'inactive' => $statuses['inactive']['label'] ?? __( 'Inactive', 'disciple-tools-genmapper' ),
+        ];
+    }
+
+    /**
+     * The Group Type used for coaching groups, or '' when coaching groups are off
+     * (also when the saved type no longer exists on the site).
+     *
+     * @return string
+     */
+    public static function coaching_group_type() {
+        $type = (string) get_option( 'dt_genmapper_coaching_group_type', '' );
+        return $type !== '' && array_key_exists( $type, self::group_type_options() ) ? $type : '';
+    }
+
     private static $_instance = null;
     public static function instance() {
         if ( is_null( self::$_instance ) ) {

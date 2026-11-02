@@ -1,5 +1,5 @@
 <div class="wrap">
-    <h2><?php esc_attr_e( 'DISCIPLE TOOLS - GENMAPPER', 'disciple-tools-genmapper' ) ?></h2>
+    <h2><?php /* translators: %s: chart label, e.g. GEN MAPPER */ echo esc_html( sprintf( __( 'DISCIPLE TOOLS - %s', 'disciple-tools-genmapper' ), strtoupper( DT_Genmapper_Metrics::chart_label() ) ) ) ?></h2>
     <div class="nav-tab-wrapper">
         <?php foreach ( $tabs as $item ): ?>
             <a href="<?php echo esc_url( $link . $item['key'] ); ?>"
