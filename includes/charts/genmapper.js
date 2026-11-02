@@ -90,6 +90,7 @@ class GenMapper {
     <button onclick="genmapper.zoomIn();" class="hint--rounded hint--right" aria-label="Zoom In"><img src="${this.plugin_uri}/charts/icons/136-zoom-in.svg"></i></button>
     <button onclick="genmapper.zoomOut();" class="hint--rounded hint--right" aria-label="Zoom Out"><img src="${this.plugin_uri}/charts/icons/137-zoom-out.svg"></i></button>
     <button onclick="genmapper.printMap('horizontal');" class="hint--rounded hint--right" aria-label="Print Horizontal"><img src="${this.plugin_uri}/charts/icons/print-horizontal.svg"></button>
+    ${window.genmapperUpdateMap ? `<button onclick="window.genmapperUpdateMap.open();" class="hint--rounded hint--right" aria-label="${window.lodash.escape(window.genmapperUpdateMap.buttonLabel)}"><img src="${this.plugin_uri}/charts/icons/039-file-text2.svg"></button>` : ''}
   `
 
     document.getElementById('edit-group').innerHTML = `<div id="edit-group-content">
