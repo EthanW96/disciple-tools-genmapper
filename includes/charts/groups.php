@@ -285,10 +285,12 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         add_filter( 'pre_determine_locale', function () use ( $locale ) {
             return $locale;
         } );
+        // Load the .mo files directly: since WordPress 6.7 load_theme_textdomain() only registers
+        // a path for just-in-time loading, which unload_textdomain() then blocks.
         unload_textdomain( 'disciple_tools' );
-        load_theme_textdomain( 'disciple_tools', get_template_directory() . '/dt-assets/translation' );
+        load_textdomain( 'disciple_tools', get_template_directory() . '/dt-assets/translation/' . $locale . '.mo', $locale );
         unload_textdomain( 'disciple-tools-genmapper' );
-        load_textdomain( 'disciple-tools-genmapper', DT_Genmapper_Metrics::dir() . 'languages/disciple-tools-genmapper-' . $locale . '.mo' );
+        load_textdomain( 'disciple-tools-genmapper', DT_Genmapper_Metrics::dir() . 'languages/disciple-tools-genmapper-' . $locale . '.mo', $locale );
 
         $fields = DT_Posts::get_post_field_settings( 'groups', false );
 

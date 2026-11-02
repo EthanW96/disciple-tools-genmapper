@@ -137,7 +137,8 @@
     const pageW = options.orientation === 'landscape' ? paper.h : paper.w;
     const pageH = options.orientation === 'landscape' ? paper.w : paper.h;
     const contentW = Math.floor((pageW - 2 * MARGIN_IN) * DPI);
-    const contentH = Math.floor((pageH - 2 * MARGIN_IN) * DPI) - HEADER_H;
+    // A few px spare so rounding never pushes a page onto a second sheet.
+    const contentH = Math.floor((pageH - 2 * MARGIN_IN) * DPI) - HEADER_H - 4;
     const rowsPerPage = Math.max(1, Math.floor((contentH + GAP_Y) / PITCH_Y));
     const heightOf = (rows) => rows * PITCH_Y - GAP_Y;
 
@@ -249,6 +250,8 @@
       rootName: skipRoot ? null : root.data.name,
       contentW,
       contentH,
+      pageW,
+      pageH,
       paperCss: `${paper.css} ${options.orientation}`,
     };
   }
@@ -418,10 +421,11 @@
         <meta charset="UTF-8">
         <title>${esc(labels.strings.title)}</title>
         <style>
-          @page { size: ${layout.paperCss}; margin: ${MARGIN_IN}in; }
+          /* Zero page margin leaves browsers no room for their own header/footer (URL, date, title). */
+          @page { size: ${layout.paperCss}; margin: 0; }
           * { box-sizing: border-box; }
           body { margin: 0; font-family: 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .um-page { width: ${layout.contentW}px; height: ${layout.contentH + HEADER_H}px; overflow: hidden; break-after: page; page-break-after: always; }
+          .um-page { width: ${layout.pageW}in; height: calc(${layout.pageH}in - 2px); padding: ${MARGIN_IN}in; overflow: hidden; break-after: page; page-break-after: always; }
           .um-page:last-child { break-after: auto; page-break-after: auto; }
           .um-header { height: ${HEADER_H}px; border-bottom: 1.5px solid #111; font-size: 10px; }
           .um-header-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
