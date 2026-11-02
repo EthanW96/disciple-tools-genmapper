@@ -503,7 +503,7 @@
       fetchLabels(options.lang)
         .then((labels) => {
           const layout = paginate(window.genmapper.data, options);
-          PrintDialog.openPrintDialog(buildDocument(layout, labels));
+          window.GenMapperPrintFrame.open(buildDocument(layout, labels));
           overlay.remove();
         })
         .catch((error) => {

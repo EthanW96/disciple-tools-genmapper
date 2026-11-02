@@ -58,6 +58,7 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
         // Fill-in "update map" print: eggs with spaces to write updated values
         wp_enqueue_script('genmapper-update-map', trailingslashit( plugin_dir_url( __FILE__ ) ) . "genmapper-update-map.js", [
             'd3',
+            'genmapper-print-frame',
         ], filemtime( plugin_dir_path( __FILE__ ) . "genmapper-update-map.js" ), true);
         $languages = [];
         foreach ( dt_get_available_languages() as $language ) {
