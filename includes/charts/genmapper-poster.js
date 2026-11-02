@@ -204,10 +204,14 @@ class GenMapperPoster {
         // ATTEMPT 11 FIX: Exact legacy constants and calculations
         const boxHeight = 80; // From legacy code
         const marginTop = 50;  // From legacy code
+        // Room beside the outermost circles for their text lines (half a node width) so names aren't cut off
+        const sidePadding = 170;
+        // The last generation needs room for its circle plus the four text lines underneath
+        const nodeBottom = boxHeight + 4 * 20;
 
-        const totalHeight = Math.max(600, marginTop + (maxY - minY) + boxHeight + marginTop);
-        const totalWidthLeft = Math.max(500, -minX + boxHeight * 1.5 / 2 + 20);
-        const totalWidthRight = Math.max(500, maxX + boxHeight * 1.5 / 2 + 20);
+        const totalHeight = Math.max(600, marginTop + (maxY - minY) + nodeBottom + marginTop);
+        const totalWidthLeft = Math.max(500, -minX + sidePadding);
+        const totalWidthRight = Math.max(500, maxX + sidePadding);
 
         return {
             minX, maxX, minY, maxY,
@@ -278,12 +282,14 @@ class GenMapperPoster {
         const pageWidth = printType === 'horizontal' ? '17in' : '11in';
         const pageHeight = printType === 'horizontal' ? '11in' : '17in';
 
+        const posterTitle = this.escapeHtml(this.getChartLabel());
+
         const minimalHtml = `
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset="UTF-8">
-                <title>GenMapper Poster - Centered with Margin</title>
+                <title>${posterTitle} Poster</title>
                 <style>
                     /* ATTEMPT 13 FIX: Add top margin while preserving horizontal centering */
                     * {
@@ -349,6 +355,18 @@ class GenMapperPoster {
         return minimalHtml;
     }
 
+    // Chart label configured in the plugin settings (localized via wpApiBase)
+    getChartLabel() {
+        const base = window.wpApiBase;
+        return (base && base.translations && base.translations.title) || 'Gen Mapper';
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     showAlert(message) {
         if (window.genmapper && typeof window.genmapper.displayAlert === 'function') {
             window.genmapper.displayAlert(message);
@@ -412,37 +430,9 @@ class PrintDialog {
         }
     }
 
-    static openPrintDialog(content, options = {}) {
-        try {
-            const iframe = document.createElement('iframe');
-            iframe.style.position = 'fixed';
-            iframe.style.width = '0';
-            iframe.style.height = '0';
-            iframe.style.opacity = '0';
-            iframe.style.border = 'none';
-
-            document.body.appendChild(iframe);
-
-            const iframeDoc = iframe.contentDocument;
-            iframeDoc.open();
-            iframeDoc.write(content);
-            iframeDoc.close();
-
-            // Print with shorter delay
-            setTimeout(() => {
-                iframe.contentWindow.print();
-                setTimeout(() => {
-                    if (document.body.contains(iframe)) {
-                        document.body.removeChild(iframe);
-                    }
-                }, 2000);
-            }, 500);
-
-            return true;
-        } catch (error) {
-            console.error('PrintDialog: Error opening print dialog:', error);
-            return false;
-        }
+    // The frame lives in print-frame.js, shared with the timelines print-out
+    static openPrintDialog(content) {
+        return window.GenMapperPrintFrame.open(content);
     }
 
     static handleOpenPrintDialog(event) {
@@ -458,3 +448,4 @@ const genMapperPoster = new GenMapperPoster();
 
 // ATTEMPT 3 FIX: Expose GenMapperPoster globally for other scripts to access
 window.GenMapperPoster = genMapperPoster;
+window.GenMapperPrintDialog = PrintDialog;

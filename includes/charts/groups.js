@@ -8,14 +8,69 @@
     }
   })
 
+  const coachingGroupsEnabled = () => window.genApiTemplate.coaching_enabled === "1"
+    && window.GenMapperCoachingLayout && window.GenMapperCoachingShapes
+
+  // Legend for the coached-group fill and coaching groups; each only when its setting is on
+  function coaching_legend() {
+    const coached = window.genApiTemplate.show_coaching === "1"
+      ? `<span class="coaching-legend__swatch coaching-legend__swatch--coached"></span>${window.lodash.escape(localizedObject.translation.coached)}
+        <span class="coaching-legend__swatch"></span>${window.lodash.escape(localizedObject.translation.not_coached)}`
+      : ''
+    const coachingGroups = coachingGroupsEnabled()
+      ? `<span class="coaching-legend__triangle"></span>${window.lodash.escape(localizedObject.translation.coaching_legend)}`
+      : ''
+    const flags = window.GenMapperHealthBadges
+      ? `<span class="coaching-legend__flag" aria-hidden="true">!</span>${window.lodash.escape(window.genHealthFlags.strings.flags_legend)}`
+      : ''
+    return coached || coachingGroups || flags ? `<div class="coaching-legend">${coached}${coachingGroups}${flags}</div>` : ''
+  }
+
+  // Coaching groups: triangle slots in the layout, and shapes drawn behind the tree
+  function enable_coaching_groups(chart) {
+    if (!coachingGroupsEnabled()) {
+      return
+    }
+    const shapes = window.GenMapperCoachingShapes
+    chart.decorateData = window.GenMapperCoachingLayout.decorate
+    chart.afterRedraw = (nodes, layer) => {
+      layer.html(shapes.markup(shapes.itemsFromNodes(nodes.descendants())))
+    }
+    chart.gShapes.on('click', () => {
+      const triangle = d3.event.target.closest('[data-record-id]')
+      if (triangle) {
+        window.open(`${wpApiShare.site_url}/groups/${encodeURIComponent(triangle.getAttribute('data-record-id'))}/`, '_blank')
+      }
+    })
+  }
+
+  // Amber "!" badges for groups the health watch flags (setting off by default)
+  function enable_health_flags(chart) {
+    if (!window.GenMapperHealthBadges) {
+      return
+    }
+    const chartElement = '#genmapper-graph-svg'
+    const previous = chart.afterRedraw
+    chart.afterRedraw = (nodes, layer) => {
+      if (typeof previous === 'function') {
+        previous(nodes, layer)
+      }
+      window.GenMapperHealthBadges.draw(chartElement)
+    }
+    window.GenMapperHealthBadges.load()
+      .then(() => window.GenMapperHealthBadges.draw(chartElement))
+      .catch((error) => console.error('Egg chart: health flags could not be loaded', error))
+  }
+
   function show_template_overview() {
 
     const windowHeight = document.documentElement.clientHeight
     chartDiv.empty().html(`
       <div class="grid-x">
         <div class="cell medium-9">
-            <span class="section-header">${localizedObject.translation.string1 /*Group Generation Tree*/}</span>
+            <span class="section-header">${window.lodash.escape(localizedObject.translation.string1) /*chart label, e.g. Egg Chart*/}</span>
             ${localizedObject.translation.string2 /*This tree only show First Generation groups that have multiplied*/}
+            ${coaching_legend()}
         </div>
         <div class="cell medium-3">
             <div class="input-group">
@@ -58,6 +113,8 @@
     `)
 
     window.genmapper = new window.genMapperClass()
+    enable_coaching_groups(window.genmapper)
+    enable_health_flags(window.genmapper)
     get_groups()
 
     /**

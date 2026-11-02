@@ -21,6 +21,7 @@ abstract class DT_Genmapper_Metrics_Chart_Base
      * Disciple_Tools_Counter constructor.
      */
     public function __construct() {
+        $this->base_title = DT_Genmapper_Metrics::chart_label();
         $this->base_slug = str_replace( ' ', '', trim( strtolower( $this->base_slug ) ) );
         $url_path = dt_get_url_path();
 
@@ -44,7 +45,7 @@ abstract class DT_Genmapper_Metrics_Chart_Base
         $pos = strpos( $content, $ref );
         if ( $pos === false ){
             $content .= '
-            <li><a href="'. site_url( '/metrics/'. $this->base_slug .'/'. $this->deep_link_hash ) .'">'.$this->base_title.'</a>
+            <li><a href="'. site_url( '/metrics/'. $this->base_slug .'/'. $this->deep_link_hash ) .'">'.esc_html( $this->base_title ).'</a>
                 <ul class="menu vertical nested" id="' . $this->base_slug . '">'
                         . $line . '
             </ul></li>';

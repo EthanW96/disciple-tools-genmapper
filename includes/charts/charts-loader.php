@@ -15,12 +15,17 @@ class DT_Genmapper_Metrics_Charts
 
     public function __construct(){
         // Load required files
+        require_once( dirname( __DIR__ ) . '/health-watch.php' );
         require_once( 'charts-base.php' );
         require_once( 'groups.php' );
         require_once( 'baptisms.php' );
+        require_once( 'timeline/timeline-queries.php' );
+        require_once( 'timeline/timeline-state-queries.php' );
+        require_once( 'timeline/timeline.php' );
 
         new DT_Genmapper_Groups_Chart();
         new DT_Genmapper_Baptisms_Chart();
+        new DT_Genmapper_Timeline_Chart();
     } // End __construct
 }
 DT_Genmapper_Metrics_Charts::instance();

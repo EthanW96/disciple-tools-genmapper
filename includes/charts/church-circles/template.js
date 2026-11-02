@@ -8,6 +8,9 @@ const healthIconSpacing = healthIconHeight / 2;
 const countLeft = boxHeight * -0.65;
 const countNumberLeft = boxHeight * -0.55;
 const countSpacing = boxHeight / 2.8;
+const NODE_WIDTH = boxHeight * 4;
+const NODE_HEIGHT = boxHeight * 3.25;
+const LINE_WIDTH = NODE_WIDTH - 60; // leaves padding inside coaching group outlines
 
 const icons = window.genApiTemplate.icons;
 let group_fields = window.genApiTemplate.group_fields;
@@ -15,6 +18,12 @@ let group_types = group_fields.group_type.default;
 let health_fields = group_fields.health_metrics.default;
 const showMetrics = window.genApiTemplate.show_metrics === "1";
 const showIcons = window.genApiTemplate.show_icons === "1";
+const showGeneration = window.genApiTemplate.show_generation === "1";
+const showPeopleCount = window.genApiTemplate.show_people_count === "1";
+// Member Count sits outside the circle's top-left corner (free of Gen label, metrics and buttons)
+const PEOPLE_ICON_SIZE = 13;
+const PEOPLE_TEXT_RIGHT = -boxHeight / 2 + 13;
+const PEOPLE_ICON_X = -boxHeight / 2 - 18;
 
 const metricIcons = {};
 const metricNumbers = [];
@@ -95,8 +104,8 @@ const template = {
   name: "Church circles 0.6",
   settings: {
     nodeSize: {
-      width: boxHeight * 2.5,
-      height: boxHeight * 2.5,
+      width: NODE_WIDTH,
+      height: NODE_HEIGHT,
     },
   },
   svg: {
@@ -113,6 +122,18 @@ const template = {
       },
     },
     ...metricIcons,
+    ...(showPeopleCount && group_fields.member_count && {
+      "people-icon": {
+        type: "image",
+        attributes: {
+          x: PEOPLE_ICON_X,
+          y: -4,
+          width: PEOPLE_ICON_SIZE,
+          height: PEOPLE_ICON_SIZE,
+          href: group_fields.member_count.icon,
+        },
+      },
+    }),
     "church-box": {
       type: "rect",
       attributes: {
@@ -249,9 +270,9 @@ const template = {
       svg: {
         type: "foreignObject",
         attributes: {
-          x: -((boxHeight * 6) / 2),
+          x: -(LINE_WIDTH / 2),
           y: boxHeight,
-          width: boxHeight * 6,
+          width: LINE_WIDTH,
           height: 20,
         },
         style: {
@@ -265,9 +286,9 @@ const template = {
       svg: {
         type: "foreignObject",
         attributes: {
-          x: -((boxHeight * 6) / 2),
+          x: -(LINE_WIDTH / 2),
           y: boxHeight + lineHeight,
-          width: boxHeight * 6,
+          width: LINE_WIDTH,
           height: 20,
         },
         style: {
@@ -280,9 +301,9 @@ const template = {
       svg: {
         type: "foreignObject",
         attributes: {
-          x: -((boxHeight * 6) / 2),
+          x: -(LINE_WIDTH / 2),
           y: boxHeight + lineHeight * 2,
-          width: boxHeight * 6,
+          width: LINE_WIDTH,
           height: 20,
         },
         style: {
@@ -295,9 +316,9 @@ const template = {
       svg: {
         type: "foreignObject",
         attributes: {
-          x: -((boxHeight * 6) / 2),
+          x: -(LINE_WIDTH / 2),
           y: boxHeight + lineHeight * 3,
-          width: boxHeight * 6,
+          width: LINE_WIDTH,
           height: 20,
         },
         style: {
@@ -305,6 +326,39 @@ const template = {
         },
       },
     },
+    ...(showPeopleCount ? [{
+      header: "people_count",
+      svg: {
+        type: "text",
+        attributes: {
+          x: PEOPLE_TEXT_RIGHT,
+          y: 7,
+        },
+        style: {
+          "text-anchor": "end",
+          "font-size": "12px",
+          "font-weight": "bold",
+          fill: "#444",
+          stroke: "none",
+        },
+      },
+    }] : []),
+    ...(showGeneration ? [{
+      header: "generation_label",
+      svg: {
+        type: "text",
+        attributes: {
+          x: -boxHeight / 2 - 8,
+          y: boxHeight / 2 + 5,
+        },
+        style: {
+          "text-anchor": "end",
+          "font-size": "12px",
+          fill: "#777",
+          stroke: "none",
+        },
+      },
+    }] : []),
     ...metricNumbers,
     {
       header: "group_type",
