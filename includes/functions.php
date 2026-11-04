@@ -69,8 +69,8 @@ class DT_Genmapper_Plugin_Functions
     public function dt_custom_fields_settings( $fields, $post_type ) {
         if ($post_type === 'groups') {
             $fields["believer_count"] = [
-                'name' => __( 'Believer Count', 'disciple_tools' ),
-                'description' => _x( 'The number of believers in this group.', 'Optional Documentation', 'disciple_tools' ),
+                'name' => __( 'Believer Count', 'disciple-tools-genmapper' ),
+                'description' => _x( 'The number of believers in this group.', 'Optional Documentation', 'disciple-tools-genmapper' ),
                 'type' => 'number',
                 'default' => '',
                 'tile' => 'relationships',
@@ -79,8 +79,8 @@ class DT_Genmapper_Plugin_Functions
                 "icon" => DT_Genmapper_Metrics::path() . '/includes/charts/church-circles/icons/believers.svg',
             ];
             $fields["baptized_count"] = [
-                'name' => __( 'Baptized Count', 'disciple_tools' ),
-                'description' => _x( 'The number of believers who are baptized.', 'Optional Documentation', 'disciple_tools' ),
+                'name' => __( 'Baptized Count', 'disciple-tools-genmapper' ),
+                'description' => _x( 'The number of believers who are baptized.', 'Optional Documentation', 'disciple-tools-genmapper' ),
                 'type' => 'number',
                 'default' => '',
                 'tile' => 'relationships',
@@ -89,8 +89,8 @@ class DT_Genmapper_Plugin_Functions
                 "icon" => get_template_directory_uri() . '/dt-assets/images/groups/baptism-2.svg',
             ];
             $fields["baptized_in_group_count"] = [
-                'name' => __( 'Baptized in Group Count', 'disciple_tools' ),
-                'description' => _x( 'The number of believers who are baptized by the group', 'Optional Documentation', 'disciple_tools' ),
+                'name' => __( 'Baptized in Group Count', 'disciple-tools-genmapper' ),
+                'description' => _x( 'The number of believers who are baptized by the group', 'Optional Documentation', 'disciple-tools-genmapper' ),
                 'type' => 'number',
                 'default' => '',
                 'tile' => 'relationships',

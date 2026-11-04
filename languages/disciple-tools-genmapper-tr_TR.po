@@ -2524,3 +2524,30 @@ msgstr "diğer alt gruplar: s. %s"
 #: includes/charts/groups.php:443
 msgid "Gen %d"
 msgstr "%d. Nesil"
+
+#: includes/functions.php:72
+msgid "Believer Count"
+msgstr "İmanlı Sayısı"
+
+#: includes/functions.php:73
+msgctxt "Optional Documentation"
+msgid "The number of believers in this group."
+msgstr "Bu gruptaki imanlıların sayısı."
+
+#: includes/functions.php:82
+msgid "Baptized Count"
+msgstr "Vaftiz Edilmiş Sayısı"
+
+#: includes/functions.php:83
+msgctxt "Optional Documentation"
+msgid "The number of believers who are baptized."
+msgstr "Vaftiz edilmiş imanlıların sayısı."
+
+#: includes/functions.php:92
+msgid "Baptized in Group Count"
+msgstr "Grupta Vaftiz Edilen Sayısı"
+
+#: includes/functions.php:93
+msgctxt "Optional Documentation"
+msgid "The number of believers who are baptized by the group"
+msgstr "Grup tarafından vaftiz edilen imanlıların sayısı"
