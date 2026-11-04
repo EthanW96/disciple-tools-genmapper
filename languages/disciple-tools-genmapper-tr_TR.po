@@ -2551,3 +2551,11 @@ msgstr "Grupta Vaftiz Edilen Sayısı"
 msgctxt "Optional Documentation"
 msgid "The number of believers who are baptized by the group"
 msgstr "Grup tarafından vaftiz edilen imanlıların sayısı"
+
+#: includes/charts/groups.php
+msgid "from #%1$s (%2$s, p. %3$s)"
+msgstr "üst grup: #%1$s (%2$s, s. %3$s)"
+
+#: includes/charts/groups.php
+msgid "No location"
+msgstr "Konum yok"

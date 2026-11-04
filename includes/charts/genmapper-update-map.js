@@ -142,13 +142,20 @@
     const rowsPerPage = Math.max(1, Math.floor((contentH + GAP_Y) / PITCH_Y));
     const heightOf = (rows) => rows * PITCH_Y - GAP_Y;
 
-    // A piece: `node`, its first `childLimit` children and their descendants, `depth` generations deep.
+    // Each sheet holds groups of one location only (the location exactly as recorded).
+    const locationOf = (node) => String(node.data.location || '').trim();
+    const sameLocationChildren = (n) =>
+      (n.children || []).filter((child) => locationOf(child) === locationOf(n));
+
+    // A piece: `node`, its first `childLimit` children and their descendants, `depth` generations
+    // deep, keeping only groups in the same location as `node`.
     const layoutPiece = (node, depth, childLimit) => {
       const piece = d3.hierarchy(node, (n) => {
-        if (!n.children || n.depth - node.depth >= depth - 1) {
+        if (n.depth - node.depth >= depth - 1) {
           return null;
         }
-        return n === node ? n.children.slice(0, childLimit) : n.children;
+        const children = sameLocationChildren(n);
+        return n === node ? children.slice(0, childLimit) : children;
       });
       d3
         .tree()
@@ -167,7 +174,7 @@
     const pieces = [];
     const cut = (node) => {
       // Keep as many of the group's children as fit on a page, then as many generations.
-      const childCount = (node.children || []).length;
+      const childCount = sameLocationChildren(node).length;
       let result = null;
       for (let limit = childCount; limit >= 1 && !result; limit--) {
         for (let depth = rowsPerPage; depth >= 2 && !result; depth--) {
@@ -181,12 +188,14 @@
         result = layoutPiece(node, 1, 0);
       }
       result.id = pieces.length;
+      result.location = locationOf(node);
       pieces.push(result);
       const members = result.piece.descendants();
       members.forEach((member) => {
         member.data.pieceId = result.id;
       });
-      // Groups below the piece, and children of the top group that did not fit, start new pieces.
+      // Groups below the piece, children that did not fit, and children in another location
+      // start new pieces.
       members.forEach((member) => {
         const included = (member.children || []).map((child) => child.data);
         (member.data.children || [])
@@ -195,6 +204,17 @@
       });
     };
     (skipRoot ? root.children || [] : [root]).forEach(cut);
+
+    // Locations print in the order they first appear in the tree (groups without one last);
+    // pieces keep tree order within a location.
+    const locationOrder = [
+      ...new Set(pieces.map((piece) => piece.location)),
+    ].sort((a, b) => (a === '') - (b === ''));
+    pieces.sort(
+      (a, b) =>
+        locationOrder.indexOf(a.location) - locationOrder.indexOf(b.location) ||
+        a.id - b.id,
+    );
 
     // First fit: beside the last row of pieces on a page, or in a new row below it.
     const pages = [];
@@ -219,6 +239,9 @@
     };
     pieces.forEach((piece) => {
       for (const page of pages) {
+        if (page.location !== piece.location) {
+          continue;
+        }
         const shelf = place(piece, page);
         if (shelf) {
           piece.page = page.number;
@@ -227,7 +250,12 @@
         }
       }
       const shelf = { y: 0, rows: piece.rows, width: piece.width };
-      pages.push({ number: pages.length + 1, shelves: [shelf], nodes: [] });
+      pages.push({
+        number: pages.length + 1,
+        location: piece.location,
+        shelves: [shelf],
+        nodes: [],
+      });
       piece.x = 0;
       piece.page = pages.length;
       piece.shelf = shelf;
@@ -287,10 +315,23 @@
         : null;
     let fromParent = '';
     if (parent && parent.pieceId !== node.pieceId) {
-      fromParent =
-        parent.page === node.page
-          ? format(labels.strings.from_parent_here, parent.data.id)
-          : format(labels.strings.from_parent, parent.data.id, parent.page);
+      const parentLocation = String(parent.data.location || '').trim();
+      if (parentLocation !== String(d.location || '').trim()) {
+        fromParent = format(
+          labels.strings.from_parent_location,
+          parent.data.id,
+          parentLocation || labels.strings.no_location,
+          parent.page,
+        );
+      } else if (parent.page === node.page) {
+        fromParent = format(labels.strings.from_parent_here, parent.data.id);
+      } else {
+        fromParent = format(
+          labels.strings.from_parent,
+          parent.data.id,
+          parent.page,
+        );
+      }
     }
     const childPages = [
       ...new Set(
@@ -390,7 +431,8 @@
     return `
       <header class="um-header">
         <div class="um-header-row">
-          <strong>${esc(labels.strings.title)}: ${esc(layout.rootName ?? labels.strings.all_groups)}</strong>
+          <span><span class="um-location">${esc(page.location || labels.strings.no_location)}</span>
+            <strong>${esc(labels.strings.title)}: ${esc(layout.rootName ?? labels.strings.all_groups)}</strong></span>
           <span>${esc(format(labels.strings.page, page.number, total))}</span>
           <span>${esc(format(labels.strings.printed, formatDate(Date.now() / 1000, labels.locale)))}
             &nbsp; ${esc(labels.strings.updated_by)} <span class="um-blank um-blank-fixed"></span>
@@ -429,7 +471,8 @@
           .um-page:last-child { break-after: auto; page-break-after: auto; }
           .um-header { height: ${HEADER_H}px; border-bottom: 1.5px solid #111; font-size: 10px; }
           .um-header-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-          .um-header-row strong { font-size: 12px; }
+          .um-header-row strong { font-size: 11px; }
+          .um-location { font-size: 17px; font-weight: bold; margin-inline-end: 10px; }
           .um-legend { display: flex; flex-wrap: wrap; gap: 0 10px; font-size: 8px; line-height: 11px; color: #444; margin-top: 2px; max-height: 22px; overflow: hidden; }
           .um-legend > span { white-space: nowrap; }
           .um-legend-item img { width: 10px; height: 10px; vertical-align: -2px; margin-inline-end: 2px; }

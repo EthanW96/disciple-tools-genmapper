@@ -352,6 +352,9 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'from_parent_here' => __( 'from #%s', 'disciple-tools-genmapper' ),
                 /* translators: 1: parent group record number, 2: page number */
                 'from_parent' => __( 'from #%1$s (p. %2$s)', 'disciple-tools-genmapper' ),
+                /* translators: 1: parent group record number, 2: parent group's location, 3: page number */
+                'from_parent_location' => __( 'from #%1$s (%2$s, p. %3$s)', 'disciple-tools-genmapper' ),
+                'no_location' => __( 'No location', 'disciple-tools-genmapper' ),
                 /* translators: %s: list of page numbers */
                 'continues' => __( 'more child groups: p. %s', 'disciple-tools-genmapper' ),
                 'all_groups' => __( 'All groups', 'disciple-tools-genmapper' ),
