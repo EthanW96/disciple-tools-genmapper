@@ -1787,27 +1787,27 @@ msgstr "Bu grafikler için Metrikler menüsünde, yönetici menüsünde ve bası
 
 #: includes/template-admin-general.php:37
 msgid "Church Circles"
-msgstr "Kilise Daireleri"
+msgstr "Kilise Çemberleri"
 
 #: includes/template-admin-general.php:45
 msgid "Show health icons in genmap?"
-msgstr "Nesil haritasında sağlık simgeleri gösterilsin mi?"
+msgstr "Nesil haritasında kilise sağlığı simgeleri gösterilsin mi?"
 
 #: includes/template-admin-general.php:51
 msgid "Controls if the health metrics icon are shown in the group circles genmap."
-msgstr "Grup dairelerinin nesil haritasında sağlık ölçütü simgelerinin gösterilip gösterilmeyeceğini belirler."
+msgstr "Grup çemberlerinin nesil haritasında kilise sağlığı ölçütü simgelerinin gösterilip gösterilmeyeceğini belirler."
 
 #: includes/template-admin-general.php:58
 msgid "Show health metrics in genmap?"
-msgstr "Nesil haritasında sağlık ölçütleri gösterilsin mi?"
+msgstr "Nesil haritasında kilise sağlığı ölçütleri gösterilsin mi?"
 
 #: includes/template-admin-general.php:64
 msgid "Controls if there fields are shown/enabled: Believer Count, Baptizer Count and Baptized in Group count. These fields are shown in the member list tile on a group record and over the circle on a group circles genmap."
-msgstr "Şu alanların gösterilip etkinleştirileceğini belirler: İmanlı Sayısı, Vaftiz Eden Sayısı ve Grupta Vaftiz Edilen Sayısı. Bu alanlar grup kaydındaki üye listesi kutucuğunda ve grup dairelerinin nesil haritasında dairenin üstünde gösterilir."
+msgstr "Şu alanların gösterilip etkinleştirileceğini belirler: İmanlı Sayısı, Vaftiz Eden Sayısı ve Grupta Vaftiz Edilen Sayısı. Bu alanlar grup kaydındaki üye listesi kutucuğunda ve grup çemberlerinin nesil haritasında çemberin üstünde gösterilir."
 
 #: includes/template-admin-general.php:71
 msgid "Collapse group page health metric fields on groups page?"
-msgstr "Grup sayfasındaki sağlık ölçütü alanları daraltılsın mı?"
+msgstr "Grup sayfasındaki kilise sağlığı ölçütü alanları daraltılsın mı?"
 
 #: includes/template-admin-general.php:77
 msgid "Controls the display style of the count fields in the member list tile on a group record."
@@ -1819,7 +1819,7 @@ msgstr "Nesil etiketleri gösterilsin mi?"
 
 #: includes/template-admin-general.php:90
 msgid "Shows the generation number (Gen 1, Gen 2, ...) beside each group circle."
-msgstr "Her grup dairesinin yanında nesil numarasını (Nesil 1, Nesil 2, ...) gösterir."
+msgstr "Her grup çemberinin yanında nesil numarasını (1. Nesil, 2. Nesil, ...) gösterir."
 
 #: includes/template-admin-general.php:97
 msgid "Show number of people?"
@@ -1827,7 +1827,7 @@ msgstr "Kişi sayısı gösterilsin mi?"
 
 #: includes/template-admin-general.php:103
 msgid "Shows the group's Member Count beside each group circle."
-msgstr "Her grup dairesinin yanında grubun Üye Sayısını gösterir."
+msgstr "Her grup çemberinin yanında grubun Üye Sayısını gösterir."
 
 #: includes/template-admin-general.php:110
 msgid "Show groups that haven't multiplied?"
@@ -1843,7 +1843,7 @@ msgstr "Koçluk alan gruplar vurgulansın mı?"
 
 #: includes/template-admin-general.php:129
 msgid "Fills the circle of groups that have at least one coach, so you can see at a glance which groups are being coached."
-msgstr "En az bir koçu olan grupların dairesini doldurur; böylece hangi grupların koçluk aldığını bir bakışta görebilirsiniz."
+msgstr "En az bir koçu olan grupların çemberini doldurur; böylece hangi grupların koçluk aldığını bir bakışta görebilirsiniz."
 
 #: includes/template-admin-general.php:136
 msgid "Show timeline on group records?"
@@ -1867,7 +1867,7 @@ msgstr "Bu Grup Türündeki gruplar üçgen olarak çizilir. Her biri koçluk ya
 
 #: includes/template-admin-general.php:167
 msgid "Show on group circles"
-msgstr "Grup dairelerinde göster"
+msgstr "Grup çemberlerinde göster"
 
 #: includes/template-admin-general.php:173
 msgid "Group Leaders"
@@ -1875,7 +1875,7 @@ msgstr "Grup Liderleri"
 
 #: includes/template-admin-general.php:176
 msgid "Controls whether the group circles display the connected coaches or the group leaders."
-msgstr "Grup dairelerinde bağlı koçların mı yoksa grup liderlerinin mi gösterileceğini belirler."
+msgstr "Grup çemberlerinde bağlı koçların mı yoksa grup liderlerinin mi gösterileceğini belirler."
 
 #: includes/template-admin-general.php:186 includes/charts/timeline/timeline.php:140
 msgid "Health watch"
@@ -1891,7 +1891,7 @@ msgstr "Grup grafiğinde sağlık işaretleri gösterilsin mi?"
 
 #: includes/template-admin-general.php:200
 msgid "Adds an amber \"!\" beside group circles that have flags, with the reasons on hover. The full list is on the Timelines page."
-msgstr "İşareti olan grup dairelerinin yanına turuncu bir \"!\" ekler; nedenler fareyle üzerine gelince görünür. Tam liste Zaman Çizelgeleri sayfasındadır."
+msgstr "İşareti olan grup çemberlerinin yanına turuncu bir \"!\" ekler; nedenler fareyle üzerine gelince görünür. Tam liste Zaman Çizelgeleri sayfasındadır."
 
 #: includes/template-admin-general.php:207 includes/charts/timeline/timeline.php:143
 msgid "Behind the usual pace"
@@ -2523,4 +2523,4 @@ msgstr "diğer alt gruplar: s. %s"
 
 #: includes/charts/groups.php:443
 msgid "Gen %d"
-msgstr "Nesil %d"
+msgstr "%d. Nesil"
