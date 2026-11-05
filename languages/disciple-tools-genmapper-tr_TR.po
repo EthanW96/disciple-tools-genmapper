@@ -1871,11 +1871,11 @@ msgstr "Grup çemberlerinde göster"
 
 #: includes/template-admin-general.php:173
 msgid "Group Leaders"
-msgstr "Grup Liderleri"
+msgstr "Grup Sorumluları"
 
 #: includes/template-admin-general.php:176
 msgid "Controls whether the group circles display the connected coaches or the group leaders."
-msgstr "Grup çemberlerinde bağlı koçların mı yoksa grup liderlerinin mi gösterileceğini belirler."
+msgstr "Grup çemberlerinde bağlı koçların mı yoksa grup sorumlularının mı gösterileceğini belirler."
 
 #: includes/template-admin-general.php:186 includes/charts/timeline/timeline.php:140
 msgid "Health watch"
@@ -2559,3 +2559,11 @@ msgstr "üst grup: #%1$s (%2$s, s. %3$s)"
 #: includes/charts/groups.php
 msgid "No location"
 msgstr "Konum yok"
+
+#: includes/charts/groups.php
+msgid "Smallest text size (pt)"
+msgstr "En küçük yazı boyutu (pt)"
+
+#: includes/charts/groups.php
+msgid "All text prints at least this size. Larger text fits fewer groups on each page."
+msgstr "Tüm yazılar en az bu boyutta basılır. Yazı büyüdükçe her sayfaya daha az grup sığar."

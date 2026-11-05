@@ -82,6 +82,8 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                     'letter' => __( 'Letter', 'disciple-tools-genmapper' ),
                     'landscape' => __( 'Landscape', 'disciple-tools-genmapper' ),
                     'portrait' => __( 'Portrait', 'disciple-tools-genmapper' ),
+                    'min_font' => __( 'Smallest text size (pt)', 'disciple-tools-genmapper' ),
+                    'min_font_help' => __( 'All text prints at least this size. Larger text fits fewer groups on each page.', 'disciple-tools-genmapper' ),
                     'print' => __( 'Print', 'disciple-tools-genmapper' ),
                     'cancel' => __( 'Cancel', 'disciple-tools-genmapper' ),
                     'error' => __( 'Could not prepare the update map. Please try again.', 'disciple-tools-genmapper' ),
