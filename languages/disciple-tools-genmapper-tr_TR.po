@@ -1855,3 +1855,12 @@ msgstr "Vaftiz Edilmiş Sayısı"
 #: includes/functions.php
 msgid "Baptized in Group Count"
 msgstr "Grupta Vaftiz Edilen Sayısı"
+
+#. translators: %d: generation number of the group, 1 = first generation
+#: includes/charts/groups.php
+msgid "Gen %d"
+msgstr "%d. Nesil"
+
+#: includes/charts/groups.php
+msgid "Receiving coaching"
+msgstr "Koçluk alıyor"

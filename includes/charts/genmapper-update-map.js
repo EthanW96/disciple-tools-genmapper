@@ -174,10 +174,33 @@
       .um-legend { display: flex; flex-wrap: wrap; gap: 0 ${H.gap}px; font-size: ${H.small}px; line-height: 1.4; color: #333; margin-top: 2px; }
       .um-legend > span { white-space: nowrap; }
       .um-legend > .um-instructions { white-space: normal; }
-      .um-legend-item img { width: ${H.legendIcon}px; height: ${H.legendIcon}px; vertical-align: -2px; margin-inline-end: 2px; }
+      .um-legend-item img, .um-legend-item svg { display: inline-block; width: ${H.legendIcon}px; height: ${H.legendIcon}px; vertical-align: -2px; margin-inline-end: 3px; }
       .um-header .um-blank { display: inline-block; border-bottom: 1px solid #888; height: ${H.header}px; }
       .um-blank-fixed { width: ${H.blankFixed}px; }
       .um-blank-short { width: ${H.blankShort}px; }`;
+  }
+
+  /**
+   * What the circle styles mean (as in the print pack key): solid = church, dashed = other
+   * group types, light = inactive, blue fill = receiving coaching, green = church commitment.
+   */
+  function circleKey(labels) {
+    const c = labels.circles || {};
+    const chart = window.genApiTemplate || {};
+    const marker = (stroke, dash, fill) =>
+      `<svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true"><circle cx="6.5" cy="6.5" r="5.2" fill="${fill}" stroke="${stroke}" stroke-width="1.4"${dash ? ' stroke-dasharray="2,1.6"' : ''}/></svg>`;
+    const items = [
+      c.church && [marker('#000', false, '#fff'), c.church],
+      c.other && [marker('#000', true, '#fff'), c.other],
+      c.inactive && [marker('#bbb', true, '#fff'), c.inactive],
+      chart.show_coaching === '1' &&
+        c.coached && [marker('#000', true, '#9fc3e2'), c.coached],
+      chart.show_icons === '1' &&
+        c.commitment && [marker('#4BAF50', false, '#fff'), c.commitment],
+    ].filter(Boolean);
+    return items.length
+      ? `<div class="um-legend um-circle-key">${items.map(([svg, label]) => `<span class="um-legend-item">${svg}${esc(label)}</span>`).join('')}</div>`
+      : '';
   }
 
   /**
@@ -203,6 +226,7 @@
             &nbsp; ${esc(labels.strings.updated_by)} <span class="um-blank um-blank-fixed"></span>
             ${esc(labels.strings.date)} <span class="um-blank um-blank-short"></span></span>
         </div>
+        ${circleKey(labels)}
         ${
           page.fullHeader
             ? `<div class="um-legend">${legendIcons(labels.counts)}<span>${esc(labels.strings.legend_lines)}</span></div>
@@ -647,7 +671,7 @@
           .um-page:last-child { break-after: auto; page-break-after: auto; }
           ${headerCss()}
           .um-header-box { overflow: hidden; }
-          svg { display: block; overflow: hidden; background: #fff; }
+          .um-page > svg { display: block; overflow: hidden; background: #fff; }
           svg .link { fill: none; stroke: #ccc; stroke-width: 2px; }
           svg circle.node-church-box { fill: #fff; }
           .um-top { height: ${TOP_H}px; font-size: 11px; line-height: ${TOP_H}px; color: #555; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -322,11 +322,26 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
 
         $connection_field = get_option( 'dt_genmapper_connection_display', 'coach' ) === 'leaders' ? 'leaders' : 'coaches';
 
+        // Circle key, with the same wording as the print pack (DT_Genmapper_Metrics::dt_terms()),
+        // read from the field settings loaded above so it is in the chosen language.
+        $types = $fields['group_type']['default'] ?? [];
+        $other_types = array_filter( array_map( function ( $type ) {
+            return $type['label'] ?? '';
+        }, array_diff_key( $types, [ 'church' => true ] ) ) );
+        $circles = [
+            'church' => $types['church']['label'] ?? __( 'Church', 'disciple-tools-genmapper' ),
+            'other' => implode( ' / ', $other_types ),
+            'inactive' => $fields['group_status']['default']['inactive']['label'] ?? __( 'Inactive', 'disciple-tools-genmapper' ),
+            'coached' => __( 'Receiving coaching', 'disciple-tools-genmapper' ),
+            'commitment' => $fields['health_metrics']['default']['church_commitment']['label'] ?? '',
+        ];
+
         $result = [
             'locale' => $locale,
             'rtl' => is_rtl(),
             'counts' => $counts,
             'health' => $health,
+            'circles' => $circles,
             'labels' => [
                 'coach' => $fields[ $connection_field ]['name'] ?? $connection_field,
                 'location' => $fields['location_grid']['name'] ?? __( 'Location', 'disciple-tools-genmapper' ),
