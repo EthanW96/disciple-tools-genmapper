@@ -82,8 +82,6 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                     'letter' => __( 'Letter', 'disciple-tools-genmapper' ),
                     'landscape' => __( 'Landscape', 'disciple-tools-genmapper' ),
                     'portrait' => __( 'Portrait', 'disciple-tools-genmapper' ),
-                    'min_font' => __( 'Smallest text size (pt)', 'disciple-tools-genmapper' ),
-                    'min_font_help' => __( 'All text prints at least this size. Larger text fits fewer groups on each page.', 'disciple-tools-genmapper' ),
                     'print' => __( 'Print', 'disciple-tools-genmapper' ),
                     'cancel' => __( 'Cancel', 'disciple-tools-genmapper' ),
                     'error' => __( 'Could not prepare the update map. Please try again.', 'disciple-tools-genmapper' ),
@@ -347,7 +345,6 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'updated_by' => __( 'Updated by', 'disciple-tools-genmapper' ),
                 'date' => __( 'Date', 'disciple-tools-genmapper' ),
                 'notes' => __( 'Notes', 'disciple-tools-genmapper' ),
-                'legend_counts' => __( 'Write new numbers in the boxes.', 'disciple-tools-genmapper' ),
                 'legend_health' => __( 'Circle practices the group has started; cross out ones it has stopped.', 'disciple-tools-genmapper' ),
                 'legend_lines' => __( 'Write changes on the lines.', 'disciple-tools-genmapper' ),
                 /* translators: %s: parent group name */
@@ -357,6 +354,8 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 /* translators: 1: parent group name, 2: parent group's location, 3: page number */
                 'from_parent_location' => __( 'from %1$s (%2$s, p. %3$s)', 'disciple-tools-genmapper' ),
                 'no_location' => __( 'No location', 'disciple-tools-genmapper' ),
+                /* translators: %d: generation number of the group, 1 = first generation */
+                'generation' => __( 'Gen %d', 'disciple-tools-genmapper' ),
                 /* translators: %s: list of page numbers */
                 'continues' => __( 'more child groups: p. %s', 'disciple-tools-genmapper' ),
                 'all_groups' => __( 'All groups', 'disciple-tools-genmapper' ),

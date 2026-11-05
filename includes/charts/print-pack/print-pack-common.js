@@ -257,6 +257,7 @@ ${pagesMarkup.map((markup) => `<section class="pp-page"><svg xmlns="http://www.w
         summarize,
         circleMarkup,
         headerMarkup,
+        pluginCss,
         buildDocument,
     };
 })();

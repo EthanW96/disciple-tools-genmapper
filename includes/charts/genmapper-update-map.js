@@ -1,16 +1,13 @@
 /**
  * "Update map" print for the groups GenMapper.
  *
- * Prints the tree currently shown with room around every egg to write updated values:
- * a box beside each count, every church health icon (current ones dark, others faint)
- * to circle or cross out, and lines for leader/coach, location, start date and notes.
+ * Prints the tree currently shown in the egg chart style (the same circles, health icons and
+ * links as on screen) with write-in lines in the white space either side of every circle:
+ * counts and location on the left, leader/coach, start date and notes on the right.
  *
- * Eggs keep a fixed, writable size, so large trees are split across pages. Pages are cut
- * between eggs (never through one); links that cross a page show "from <parent name> (p. N)"
- * on the child and "more child groups: p. N" on the parent.
- *
- * The person printing chooses the smallest text size. Every font is at least that size,
- * and eggs and the page header grow to fit, so larger text means fewer groups per page.
+ * Eggs keep a fixed, writable size, so large trees are split across pages, one location per
+ * sheet. Pages are cut between eggs (never through one); links that cross a page show
+ * "from <parent name> (p. N)" on the child and "more child groups: p. N" on the parent.
  */
 (function () {
   'use strict';
@@ -22,16 +19,60 @@
   const t = settings.translations;
 
   const DPI = 96;
-  const PX_PER_PT = 96 / 72;
   const MARGIN_IN = 0.4;
   const GAP_X = 16;
-  const GAP_Y = 26;
-  const R = 46;
+  const GAP_Y = 24;
+
+  // Egg geometry (CSS px). The circle is the on-screen chart's (church-circles/template.js,
+  // 80px), drawn a little larger so it holds its own beside the write-in lines.
+  const CIRCLE = 80;
+  const EGG_SCALE = 1.15;
+  const CIRCLE_PX = CIRCLE * EGG_SCALE;
+  const TOP_H = 18; // generation and "from <parent>" line
+  const SIDE_W = 100; // write-in lines either side of the circle
+  const CENTER_W = 110;
+  const CELL_W = SIDE_W * 2 + CENTER_W;
+  const TEXT_H = 52; // name, leader names, page note
+  const PITCH_X = CELL_W + GAP_X;
+  // Vertical layout depends on whether the chart shows metric icons above the circle,
+  // so it is worked out when printing (see setGeometry).
+  let ABOVE = 0;
+  let CIRCLE_TOP = 0;
+  let TEXT_Y = 0;
+  let CELL_H = 0;
+  let PITCH_Y = 0;
+  function setGeometry() {
+    const metricsShown =
+      window.genApiTemplate && window.genApiTemplate.show_metrics === '1';
+    ABOVE = Math.round((metricsShown ? 42 : 6) * EGG_SCALE);
+    CIRCLE_TOP = TOP_H + ABOVE;
+    TEXT_Y = CIRCLE_TOP + CIRCLE_PX + 4;
+    CELL_H = TEXT_Y + TEXT_H;
+    PITCH_Y = CELL_H + GAP_Y;
+  }
+  const LINES_PER_SIDE = 3;
+
+  // Fallback drawing when a group is not on screen (or outside GenMapper, e.g. in tests)
+  const R = CIRCLE / 2;
   const HEALTH_ICON = 17;
-  const DEFAULT_MIN_PT = 9;
-  const MIN_PT = 6;
-  const MAX_PT = 16;
-  const MIN_PT_STORAGE_KEY = 'genmapperUpdateMapMinPt';
+
+  // Header type sizes (CSS px): kept large enough to read without glasses.
+  const H = {
+    header: 12,
+    title: 12,
+    location: 18,
+    small: 12,
+    legendIcon: 12,
+    gap: 13,
+    blankFixed: 160,
+    blankShort: 93,
+  };
+
+  const LIVE_NODE_SELECTOR = '#genmapper-graph-svg .node';
+  // Text, buttons, and the member tally (its count is on the "member count" write-in line)
+  const LIVE_NODE_DROP =
+    'foreignObject, .addNode, .removeNode, .rebaseNode, .node-generation_label, .node-people-icon, .node-people_count';
+
   const PAPER = {
     letter: { w: 8.5, h: 11, css: 'letter' },
     a4: { w: 8.27, h: 11.69, css: 'A4' },
@@ -51,61 +92,8 @@
         (text, value, index) => text.split(`%${index + 1}$s`).join(value),
         template,
       )
-      .replace('%s', values[0]);
-  }
-
-  function clampMinPt(value) {
-    const pt = parseFloat(value);
-    if (!Number.isFinite(pt)) {
-      return DEFAULT_MIN_PT;
-    }
-    return Math.min(MAX_PT, Math.max(MIN_PT, pt));
-  }
-
-  /**
-   * Font sizes and egg dimensions (in CSS px) for a smallest text size in points.
-   * Each font keeps its design size unless the minimum is larger; spacing follows the fonts.
-   */
-  function sizing(minPt) {
-    const m = clampMinPt(minPt) * PX_PER_PT;
-    const atLeast = (base) => Math.max(base, m);
-    const z = {
-      minPt: clampMinPt(minPt),
-      text: atLeast(9),
-      small: atLeast(8),
-      top: atLeast(8.5),
-      name: atLeast(11),
-      header: atLeast(10),
-      title: atLeast(11),
-      countNum: atLeast(9),
-      legendIcon: atLeast(10),
-      // Location and leader names stay a step larger than everything else.
-      location: Math.max(17, m * 1.5),
-      leader: Math.max(13, m * 1.3),
-    };
-    // Write-in space scales with the body text.
-    z.scale = z.text / 9;
-    z.lineH = Math.ceil(Math.max(15, z.text * 1.5));
-    z.leaderLineH = Math.ceil(z.leader * 1.22);
-    z.topH = Math.ceil(Math.max(18, z.top * 1.35));
-    z.countHeadH = Math.ceil(Math.max(18, z.countNum * 1.6));
-    z.countsH = z.countHeadH + 26;
-    z.countW = Math.max(50, Math.ceil(z.countNum * 4.6));
-    z.circleCy = z.topH + z.countsH + 2 + R;
-    z.textY = z.circleCy + R + 4;
-    z.nameH = Math.ceil(z.name * 1.4);
-    z.leadersH = Math.max(18, 2 * z.leaderLineH);
-    z.continuesH = Math.ceil(z.small * 1.4);
-    // Name, leaders (up to two lines), location, start date, two notes lines, page note.
-    z.textH = z.nameH + z.leadersH + 4 * z.lineH + z.continuesH + 2;
-    z.cellW = Math.max(
-      Math.round(250 * Math.max(1, z.scale)),
-      4 * z.countW + 3 * 8 + 10,
-    );
-    z.cellH = z.textY + z.textH;
-    z.pitchX = z.cellW + GAP_X;
-    z.pitchY = z.cellH + GAP_Y;
-    return z;
+      .replace('%s', values[0])
+      .replace('%d', values[0]);
   }
 
   /**
@@ -176,20 +164,20 @@
     }
   }
 
-  function headerCss(z) {
+  function headerCss() {
     return `
-      .um-header { border-bottom: 1.5px solid #111; padding-bottom: 3px; font-size: ${z.header}px; font-family: 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; color: #111; }
+      .um-header { border-bottom: 1.5px solid #111; padding-bottom: 3px; font-size: ${H.header}px; font-family: 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; color: #111; }
       .um-header * { box-sizing: border-box; }
       .um-header-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; }
-      .um-header-row strong { font-size: ${z.title}px; }
-      .um-location { font-size: ${z.location}px; font-weight: bold; margin-inline-end: 10px; }
-      .um-legend { display: flex; flex-wrap: wrap; gap: 0 ${Math.round(10 * z.scale)}px; font-size: ${z.small}px; line-height: 1.4; color: #333; margin-top: 2px; }
+      .um-header-row strong { font-size: ${H.title}px; }
+      .um-location { font-size: ${H.location}px; font-weight: bold; margin-inline-end: 10px; }
+      .um-legend { display: flex; flex-wrap: wrap; gap: 0 ${H.gap}px; font-size: ${H.small}px; line-height: 1.4; color: #333; margin-top: 2px; }
       .um-legend > span { white-space: nowrap; }
       .um-legend > .um-instructions { white-space: normal; }
-      .um-legend-item img { width: ${z.legendIcon}px; height: ${z.legendIcon}px; vertical-align: -2px; margin-inline-end: 2px; }
-      .um-header .um-blank { display: inline-block; border-bottom: 1px solid #888; height: ${Math.round(z.header)}px; }
-      .um-blank-fixed { width: ${Math.round(120 * z.scale)}px; }
-      .um-blank-short { width: ${Math.round(70 * z.scale)}px; }`;
+      .um-legend-item img { width: ${H.legendIcon}px; height: ${H.legendIcon}px; vertical-align: -2px; margin-inline-end: 2px; }
+      .um-header .um-blank { display: inline-block; border-bottom: 1px solid #888; height: ${H.header}px; }
+      .um-blank-fixed { width: ${H.blankFixed}px; }
+      .um-blank-short { width: ${H.blankShort}px; }`;
   }
 
   /**
@@ -217,32 +205,27 @@
         </div>
         ${
           page.fullHeader
-            ? `<div class="um-legend">${legendIcons(labels.counts)}<span>${esc(labels.strings.legend_counts)} ${esc(labels.strings.legend_lines)}</span></div>
+            ? `<div class="um-legend">${legendIcons(labels.counts)}<span>${esc(labels.strings.legend_lines)}</span></div>
         <div class="um-legend">${legendIcons(labels.health)}<span>${esc(labels.strings.legend_health)}</span></div>`
-            : `<div class="um-legend"><span class="um-instructions">${esc(labels.strings.legend_counts)} ${esc(labels.strings.legend_lines)} ${esc(labels.strings.legend_health)}</span></div>`
+            : `<div class="um-legend"><span class="um-instructions">${esc(labels.strings.legend_lines)} ${esc(labels.strings.legend_health)}</span></div>`
         }
       </header>`;
   }
 
   /**
-   * Height of the page header at this text size, measured in this document so wrapped
-   * legend lines are never cut off. Without a document (or labels) fall back to an estimate.
+   * Height of the page header, measured in this document so wrapped legend lines are never
+   * cut off. Without a document (or labels) fall back to an estimate.
    */
-  function headerHeight(
-    z,
-    contentW,
-    layoutLike,
-    labels,
-    longestLocation,
-    full,
-  ) {
-    const estimate = Math.ceil(z.location * 1.3 + 2 * z.small * 1.4 * 2 + 12);
+  function headerHeight(contentW, layoutLike, labels, longestLocation, full) {
+    const estimate = Math.ceil(
+      H.location * 1.3 + (full ? 3 : 1) * H.small * 1.4 + 12,
+    );
     if (!labels || typeof document === 'undefined' || !document.body) {
       return estimate;
     }
     const box = document.createElement('div');
     box.style.cssText = `position:absolute;left:-10000px;top:0;visibility:hidden;width:${contentW}px;`;
-    box.innerHTML = `<style>${headerCss(z)}</style>${renderHeader({ number: 999, location: longestLocation, fullHeader: full }, 999, layoutLike, labels)}`;
+    box.innerHTML = `<style>${headerCss()}</style>${renderHeader({ number: 999, location: longestLocation, fullHeader: full }, 999, layoutLike, labels)}`;
     document.body.appendChild(box);
     const height = box
       .querySelector('.um-header')
@@ -260,7 +243,7 @@
    * by side and in rows, so small families share a page.
    */
   function paginate(data, options, labels) {
-    const z = sizing(options.minPt ?? DEFAULT_MIN_PT);
+    setGeometry();
     const root = d3.stratify()(data.map((row) => ({ ...row })));
     // id 0 is GenMapper's placeholder root for "all first generation groups".
     const skipRoot = String(root.data.id) === '0';
@@ -282,7 +265,6 @@
         labels ? labels.strings.no_location : '',
       );
     const headerFullH = headerHeight(
-      z,
       contentW,
       { rootName },
       labels,
@@ -291,14 +273,14 @@
     );
     const headerCompactH = Math.min(
       headerFullH,
-      headerHeight(z, contentW, { rootName }, labels, longestLocation, false),
+      headerHeight(contentW, { rootName }, labels, longestLocation, false),
     );
     // A few px spare so rounding never pushes a page onto a second sheet.
     const bodyH = Math.floor((pageH - 2 * MARGIN_IN) * DPI) - 4;
     const contentH = bodyH - headerFullH;
     // Pieces are cut to fit the shortest sheet body (a first sheet, with the full key).
-    const rowsPerPage = Math.max(1, Math.floor((contentH + GAP_Y) / z.pitchY));
-    const heightOf = (rows) => rows * z.pitchY - GAP_Y;
+    const rowsPerPage = Math.max(1, Math.floor((contentH + GAP_Y) / PITCH_Y));
+    const heightOf = (rows) => rows * PITCH_Y - GAP_Y;
 
     const sameLocationChildren = (n) =>
       (n.children || []).filter((child) => locationOf(child) === locationOf(n));
@@ -315,14 +297,14 @@
       });
       d3
         .tree()
-        .nodeSize([z.pitchX, z.pitchY])
+        .nodeSize([PITCH_X, PITCH_Y])
         .separation((a, b) => (a.parent === b.parent ? 1 : 1.08))(piece);
       const xs = piece.descendants().map((member) => member.x);
       const minX = Math.min(...xs);
       return {
         piece,
         minX,
-        width: Math.max(...xs) - minX + z.cellW,
+        width: Math.max(...xs) - minX + CELL_W,
         rows: piece.height + 1,
       };
     };
@@ -429,7 +411,7 @@
         const node = member.data;
         node.page = piece.page;
         node.px = offset + piece.x + member.x - piece.minX;
-        node.py = piece.shelf.y + member.depth * z.pitchY;
+        node.py = piece.shelf.y + member.depth * PITCH_Y;
         pages[piece.page - 1].nodes.push(node);
       });
     });
@@ -438,9 +420,8 @@
       pages,
       skipRoot,
       rootName,
-      z,
-      cellW: z.cellW,
-      cellH: z.cellH,
+      cellW: CELL_W,
+      cellH: CELL_H,
       contentW,
       contentH,
       pageW,
@@ -449,32 +430,108 @@
     };
   }
 
-  function healthPositions(count, z) {
-    // Icons on a ring just inside the circle; a ninth (and any beyond) go in the middle.
-    const ring = Math.min(count, 8);
-    const radius = R - HEALTH_ICON * 0.85;
-    const positions = [];
-    for (let i = 0; i < ring; i++) {
-      const angle = -Math.PI / 2 + (2 * Math.PI * i) / ring;
-      positions.push([
-        z.cellW / 2 + radius * Math.cos(angle),
-        z.circleCy + radius * Math.sin(angle),
-      ]);
+  /**
+   * The egg as drawn in the chart on screen: circle, health icons, member count, coaching
+   * fill. Text and buttons are left out (printed separately in the chosen language).
+   */
+  function liveNodesById() {
+    const map = new Map();
+    if (typeof document === 'undefined') {
+      return map;
     }
-    for (let i = ring; i < count; i++) {
-      const spread = (i - ring - (count - ring - 1) / 2) * (HEALTH_ICON + 2);
-      positions.push([z.cellW / 2 + spread, z.circleCy]);
-    }
-    return positions;
+    document.querySelectorAll(LIVE_NODE_SELECTOR).forEach((element) => {
+      const datum = element.__data__;
+      if (datum && datum.data) {
+        map.set(String(datum.data.id), element);
+      }
+    });
+    return map;
   }
 
-  function renderEgg(node, layout, labels) {
-    const z = layout.z;
+  function ringHealthMarkup(d, labels) {
+    // Icons on a ring just inside the circle; a ninth (and any beyond) go in the middle.
+    const count = labels.health.length;
+    const ring = Math.min(count, 8);
+    const radius = R - HEALTH_ICON * 0.85;
+    return labels.health
+      .map((item, index) => {
+        if (!item.icon) {
+          return '';
+        }
+        let hx = 0;
+        let hy = R;
+        if (index < ring) {
+          const angle = -Math.PI / 2 + (2 * Math.PI * index) / ring;
+          hx = radius * Math.cos(angle);
+          hy = R + radius * Math.sin(angle);
+        } else {
+          hx = (index - ring - (count - ring - 1) / 2) * (HEALTH_ICON + 2);
+        }
+        return `<image href="${item.icon}" x="${hx - HEALTH_ICON / 2}" y="${hy - HEALTH_ICON / 2}" width="${HEALTH_ICON}" height="${HEALTH_ICON}" opacity="${d[item.key] ? 1 : 0.18}"/>`;
+      })
+      .join('');
+  }
+
+  // Circle drawn with origin at the top centre of the circle, as on screen.
+  function circleMarkup(d, live, labels) {
+    if (live) {
+      const clone = live.cloneNode(true);
+      clone
+        .querySelectorAll(LIVE_NODE_DROP)
+        .forEach((element) => element.remove());
+      return `<g class="${esc(live.getAttribute('class'))}">${clone.innerHTML}</g>`;
+    }
+    const common = window.GenMapperPrintCommon;
+    if (common && typeof common.circleMarkup === 'function') {
+      const cell = CIRCLE * 0.24;
+      return (
+        common.circleMarkup(d, 0, R, R) +
+        common.healthGridMarkup(d, -cell * 1.5, R - cell * 1.5, cell)
+      );
+    }
+    return `<circle cx="0" cy="${R}" r="${R}" fill="#fff" stroke="${d.active === false ? '#888' : '#000'}" stroke-width="1.5" ${d.group_type === 'church' ? '' : 'stroke-dasharray="5,4"'}/>${ringHealthMarkup(d, labels)}`;
+  }
+
+  // The write-in lines: counts then location on the left; leader/coach, start date, notes on the right.
+  function sideLines(d, labels) {
+    const left = labels.counts
+      .slice(0, LINES_PER_SIDE)
+      .map((count) => ({ label: count.label, value: d[count.key] ?? 0 }));
+    if (left.length < LINES_PER_SIDE) {
+      left.push({ label: labels.labels.location, value: d.location || '' });
+    }
+    while (left.length < LINES_PER_SIDE) {
+      left.push({ label: '', value: '' });
+    }
+    const right = [
+      { label: labels.labels.coach, value: d.coach || '' },
+      {
+        label: labels.labels.start_date,
+        value: formatDate(d.start_date_timestamp, labels.locale),
+      },
+      { label: labels.strings.notes, value: '' },
+    ];
+    return { left, right };
+  }
+
+  function linesMarkup(lines, x, side) {
+    const items = lines
+      .map(
+        (line) => `
+          <div class="um-wl">
+            <div class="um-wl-label">${line.label ? `${esc(line.label)}:` : ''}</div>
+            <div class="um-wl-rule">${line.value !== '' ? `<span class="um-wl-value">${esc(line.value)}</span>` : ''}</div>
+          </div>`,
+      )
+      .join('');
+    return `
+      <foreignObject x="${x}" y="${CIRCLE_TOP - 4}" width="${SIDE_W - 6}" height="${CIRCLE_PX + 8}">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="um-side um-side-${side}">${items}</div>
+      </foreignObject>`;
+  }
+
+  function renderEgg(node, layout, labels, liveNodes) {
     const d = node.data;
-    const x = node.px;
-    const y = node.py;
-    const isChurch = d.group_type === 'church';
-    const inactive = d.active === false;
     const parent =
       node.parent && !(layout.skipRoot && node.parent.depth === 0)
         ? node.parent
@@ -499,6 +556,11 @@
         );
       }
     }
+    const generation =
+      d.generation && labels.strings.generation
+        ? format(labels.strings.generation, d.generation)
+        : '';
+    const topLine = [generation, fromParent].filter(Boolean).join(' · ');
     const childPages = [
       ...new Set(
         (node.children || [])
@@ -506,64 +568,21 @@
           .map((child) => child.page),
       ),
     ].sort((a, b) => a - b);
-
-    const counts = labels.counts
-      .map(
-        (count) => `
-        <div class="um-count" title="${esc(count.label)}">
-          <div class="um-count-head">
-            ${count.icon ? `<img src="${count.icon}" alt="">` : `<span>${esc(count.label.slice(0, 3))}</span>`}
-            <span class="um-current">${esc(d[count.key] ?? 0)}</span>
-          </div>
-          <div class="um-box"></div>
-        </div>`,
-      )
-      .join('');
-
-    const positions = healthPositions(labels.health.length, z);
-    const health = labels.health
-      .map((item, index) => {
-        if (!item.icon) {
-          return '';
-        }
-        const [hx, hy] = positions[index];
-        return `<image href="${item.icon}" x="${hx - HEALTH_ICON / 2}" y="${hy - HEALTH_ICON / 2}" width="${HEALTH_ICON}" height="${HEALTH_ICON}" opacity="${d[item.key] ? 1 : 0.22}"/>`;
-      })
-      .join('');
-
-    const line = (label, value) => `
-      <div class="um-line">
-        <b>${esc(label)}:</b>
-        ${value ? `<span class="um-current">${esc(value)}</span>` : ''}
-        <span class="um-blank"></span>
-      </div>`;
+    const inactive = d.active === false;
+    const { left, right } = sideLines(d, labels);
 
     return `
-      <g transform="translate(${x}, ${y})">
-        <foreignObject x="0" y="0" width="${z.cellW}" height="${z.topH}">
-          <div xmlns="http://www.w3.org/1999/xhtml" class="um-top">
-            <span class="um-from">${esc(fromParent)}</span>
-          </div>
+      <g transform="translate(${node.px}, ${node.py})">
+        <foreignObject x="0" y="0" width="${CELL_W}" height="${TOP_H}">
+          <div xmlns="http://www.w3.org/1999/xhtml" class="um-top">${esc(topLine)}</div>
         </foreignObject>
-        <foreignObject x="0" y="${z.topH}" width="${z.cellW}" height="${z.countsH}">
-          <div xmlns="http://www.w3.org/1999/xhtml" class="um-counts">${counts}</div>
-        </foreignObject>
-        <circle cx="${z.cellW / 2}" cy="${z.circleCy}" r="${R}" fill="#fff"
-          stroke="${inactive ? '#888' : '#000'}" stroke-width="1.5"
-          ${isChurch ? '' : 'stroke-dasharray="5,4"'}/>
-        ${health}
-        <foreignObject x="0" y="${z.textY}" width="${z.cellW}" height="${z.textH}">
+        <g transform="translate(${CELL_W / 2}, ${CIRCLE_TOP}) scale(${EGG_SCALE})">${circleMarkup(d, liveNodes.get(String(d.id)), labels)}</g>
+        ${linesMarkup(left, 0, 'left')}
+        ${linesMarkup(right, SIDE_W + CENTER_W + 6, 'right')}
+        <foreignObject x="0" y="${TEXT_Y}" width="${CELL_W}" height="${TEXT_H}">
           <div xmlns="http://www.w3.org/1999/xhtml" class="um-text">
-            <div class="um-name">${esc(d.name)}${inactive ? ` <span class="um-inactive">(${esc(labels.labels.inactive)})</span>` : ''}</div>
-            <div class="um-leaders">
-              <b>${esc(labels.labels.coach)}:</b>
-              ${d.coach ? `<span class="um-leader-names">${esc(d.coach)}</span>` : ''}
-              <span class="um-blank"></span>
-            </div>
-            ${line(labels.labels.location, d.location)}
-            ${line(labels.labels.start_date, formatDate(d.start_date_timestamp, labels.locale))}
-            ${line(labels.strings.notes, '')}
-            <div class="um-line"><span class="um-blank"></span></div>
+            <div class="um-name${inactive ? ' is-inactive' : ''}">${esc(d.name)}${inactive ? ` <span class="um-inactive">(${esc(labels.labels.inactive)})</span>` : ''}</div>
+            <div class="um-leader-names">${esc(d.coach || '')}</div>
             ${childPages.length ? `<div class="um-continues">${esc(format(labels.strings.continues, childPages.join(', ')))}</div>` : ''}
           </div>
         </foreignObject>
@@ -571,7 +590,6 @@
   }
 
   function renderLinks(page, layout) {
-    const z = layout.z;
     return page.nodes
       .filter(
         (node) =>
@@ -580,18 +598,27 @@
           node.parent.pieceId === node.pieceId,
       )
       .map((node) => {
-        const cx = node.px + z.cellW / 2;
-        const cy = node.py;
-        const px = node.parent.px + z.cellW / 2;
-        const py = node.parent.py + z.cellH;
+        const cx = node.px + CELL_W / 2;
+        const cy = node.py + TOP_H;
+        const px = node.parent.px + CELL_W / 2;
+        const py = node.parent.py + TEXT_Y + 36;
         const mid = (cy + py) / 2;
-        return `<path d="M${px},${py} C${px},${mid} ${cx},${mid} ${cx},${cy}" fill="none" stroke="#999" stroke-width="1.2"/>`;
+        return `<path class="link" d="M${px},${py} C${px},${mid} ${cx},${mid} ${cx},${cy}" fill="none"/>`;
       })
       .join('');
   }
 
+  // Every CSS rule from GenMapper's own stylesheets, so copied eggs look as they do on screen.
+  function chartCss() {
+    const common = window.GenMapperPrintCommon;
+    if (common && typeof common.pluginCss === 'function') {
+      return common.pluginCss();
+    }
+    return '';
+  }
+
   function buildDocument(layout, labels) {
-    const z = layout.z;
+    const liveNodes = liveNodesById();
     const pages = layout.pages
       .map(
         (page) => `
@@ -599,7 +626,7 @@
           <div class="um-header-box" style="height:${page.headerH}px">${renderHeader(page, layout.pages.length, layout, labels)}</div>
           <svg xmlns="http://www.w3.org/2000/svg" width="${layout.contentW}" height="${page.contentH}" viewBox="0 0 ${layout.contentW} ${page.contentH}">
             ${renderLinks(page, layout)}
-            ${page.nodes.map((node) => renderEgg(node, layout, labels)).join('')}
+            ${page.nodes.map((node) => renderEgg(node, layout, labels, liveNodes)).join('')}
           </svg>
         </section>`,
       )
@@ -611,57 +638,35 @@
         <meta charset="UTF-8">
         <title>${esc(labels.strings.title)}</title>
         <style>
+          ${chartCss()}
           /* Zero page margin leaves browsers no room for their own header/footer (URL, date, title). */
           @page { size: ${layout.paperCss}; margin: 0; }
           * { box-sizing: border-box; }
-          body { margin: 0; font-family: 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { margin: 0; background: #fff; font-family: 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; color: #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .um-page { width: ${layout.pageW}in; height: calc(${layout.pageH}in - 2px); padding: ${MARGIN_IN}in; overflow: hidden; break-after: page; page-break-after: always; }
           .um-page:last-child { break-after: auto; page-break-after: auto; }
-          ${headerCss(z)}
+          ${headerCss()}
           .um-header-box { overflow: hidden; }
-          svg { display: block; overflow: hidden; }
-          .um-top { display: flex; align-items: baseline; height: ${z.topH}px; font-size: ${z.top}px; color: #444; white-space: nowrap; }
-          .um-from { overflow: hidden; text-overflow: ellipsis; }
-          .um-counts { display: flex; justify-content: center; gap: 8px; }
-          .um-count { width: ${z.countW}px; }
-          .um-count-head { display: flex; align-items: center; justify-content: center; gap: 3px; height: ${z.countHeadH}px; font-size: ${z.countNum}px; }
-          .um-count-head img { width: ${Math.max(15, z.countNum * 1.3)}px; height: ${Math.max(15, z.countNum * 1.3)}px; }
-          .um-box { height: 22px; border: 1.2px solid #111; border-radius: 3px; }
-          .um-text { font-size: ${z.text}px; line-height: ${z.lineH}px; }
-          .um-name { font-weight: bold; font-size: ${z.name}px; line-height: ${z.nameH}px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-          .um-inactive { font-weight: normal; color: #555; }
-          .um-line { display: flex; align-items: baseline; gap: 4px; height: ${z.lineH}px; }
-          /* The leader/coach names are what the person filling in the sheet recognises, so they sit
-             right under the group name in larger type (up to two lines). */
-          .um-leaders { display: flex; align-items: baseline; gap: 4px; min-height: 18px; max-height: ${z.leadersH}px; overflow: hidden; }
-          .um-leaders b { white-space: nowrap; flex-shrink: 0; }
-          .um-leader-names { font-size: ${z.leader}px; line-height: ${z.leaderLineH}px; font-weight: bold; color: #111; max-width: 78%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-          .um-leaders .um-blank { flex: 1 0 ${Math.round(40 * z.scale)}px; }
-          .um-line b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 48%; flex-shrink: 1; }
-          .um-current { color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 38%; flex-shrink: 1; }
-          .um-text .um-blank { flex: 1 0 ${Math.round(64 * z.scale)}px; border-bottom: 1px solid #888; height: ${Math.round(z.text * 1.3)}px; }
-          .um-continues { font-size: ${z.small}px; line-height: ${z.continuesH}px; color: #444; text-align: end; }
+          svg { display: block; overflow: hidden; background: #fff; }
+          svg .link { fill: none; stroke: #ccc; stroke-width: 2px; }
+          svg circle.node-church-box { fill: #fff; }
+          .um-top { height: ${TOP_H}px; font-size: 11px; line-height: ${TOP_H}px; color: #555; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .um-side { display: flex; flex-direction: column; justify-content: space-between; height: ${CIRCLE_PX + 8}px; font-size: 11px; color: #333; }
+          .um-wl-label { line-height: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          /* The current value sits on the line; the new value is written beside it. */
+          .um-wl-rule { height: 17px; line-height: 17px; border-bottom: 1px solid #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .um-wl-value { color: #000; font-weight: bold; }
+          .um-side-left { text-align: end; }
+          .um-text { text-align: center; }
+          .um-name { font-size: 15px; line-height: 19px; font-weight: bold; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .um-name.is-inactive { color: #888; }
+          .um-inactive { font-weight: normal; font-size: 12px; }
+          .um-leader-names { font-size: 13px; line-height: 17px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .um-continues { font-size: 10px; line-height: 14px; color: #555; text-align: end; }
         </style>
       </head>
       <body>${pages}</body>
       </html>`;
-  }
-
-  function savedMinPt() {
-    try {
-      const saved = window.localStorage.getItem(MIN_PT_STORAGE_KEY);
-      return saved ? clampMinPt(saved) : DEFAULT_MIN_PT;
-    } catch (e) {
-      return DEFAULT_MIN_PT;
-    }
-  }
-
-  function saveMinPt(value) {
-    try {
-      window.localStorage.setItem(MIN_PT_STORAGE_KEY, String(value));
-    } catch (e) {
-      // Storage unavailable (private window, blocked): the default is used next time.
-    }
   }
 
   function showDialog() {
@@ -690,10 +695,6 @@
         <label>
           <select name="orientation"><option value="landscape">${esc(t.landscape)}</option><option value="portrait">${esc(t.portrait)}</option></select>
         </label>
-        <label>${esc(t.min_font)}
-          <input type="number" name="min_pt" min="${MIN_PT}" max="${MAX_PT}" step="0.5" value="${savedMinPt()}" required>
-        </label>
-        <p style="font-size:.85em;margin-top:-8px;">${esc(t.min_font_help)}</p>
         <p class="um-dialog-error" style="color:#b00;"></p>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button type="button" class="button hollow" data-cancel>${esc(t.cancel)}</button>
@@ -714,9 +715,7 @@
         lang: form.elements.lang.value,
         paper: form.elements.paper.value,
         orientation: form.elements.orientation.value,
-        minPt: clampMinPt(form.elements.min_pt.value),
       };
-      saveMinPt(options.minPt);
       fetchLabels(options.lang)
         .then((labels) => {
           const layout = paginate(window.genmapper.data, options, labels);
@@ -737,6 +736,5 @@
     // Exposed for rendering outside the GenMapper page (e.g. previews and tests).
     paginate,
     buildDocument,
-    sizing,
   };
 })();
