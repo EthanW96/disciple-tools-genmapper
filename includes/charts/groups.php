@@ -350,12 +350,12 @@ class DT_Genmapper_Groups_Chart extends DT_Genmapper_Metrics_Chart_Base
                 'legend_counts' => __( 'Write new numbers in the boxes.', 'disciple-tools-genmapper' ),
                 'legend_health' => __( 'Circle practices the group has started; cross out ones it has stopped.', 'disciple-tools-genmapper' ),
                 'legend_lines' => __( 'Write changes on the lines.', 'disciple-tools-genmapper' ),
-                /* translators: %s: parent group record number */
-                'from_parent_here' => __( 'from #%s', 'disciple-tools-genmapper' ),
-                /* translators: 1: parent group record number, 2: page number */
-                'from_parent' => __( 'from #%1$s (p. %2$s)', 'disciple-tools-genmapper' ),
-                /* translators: 1: parent group record number, 2: parent group's location, 3: page number */
-                'from_parent_location' => __( 'from #%1$s (%2$s, p. %3$s)', 'disciple-tools-genmapper' ),
+                /* translators: %s: parent group name */
+                'from_parent_here' => __( 'from %s', 'disciple-tools-genmapper' ),
+                /* translators: 1: parent group name, 2: page number */
+                'from_parent' => __( 'from %1$s (p. %2$s)', 'disciple-tools-genmapper' ),
+                /* translators: 1: parent group name, 2: parent group's location, 3: page number */
+                'from_parent_location' => __( 'from %1$s (%2$s, p. %3$s)', 'disciple-tools-genmapper' ),
                 'no_location' => __( 'No location', 'disciple-tools-genmapper' ),
                 /* translators: %s: list of page numbers */
                 'continues' => __( 'more child groups: p. %s', 'disciple-tools-genmapper' ),

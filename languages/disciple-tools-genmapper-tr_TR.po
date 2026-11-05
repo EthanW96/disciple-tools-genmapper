@@ -1785,16 +1785,16 @@ msgid "Circle practices the group has started; cross out ones it has stopped."
 msgstr "Grubun başladığı uygulamaları daire içine alın; bıraktıklarının üzerini çizin."
 
 #: includes/charts/groups.php includes/charts/genmapper-update-map.js
-msgid "from #%s"
-msgstr "üst grup: #%s"
+msgid "from %s"
+msgstr "üst grup: %s"
 
 #: includes/charts/groups.php includes/charts/genmapper-update-map.js
-msgid "from #%1$s (p. %2$s)"
-msgstr "üst grup: #%1$s (s. %2$s)"
+msgid "from %1$s (p. %2$s)"
+msgstr "üst grup: %1$s (s. %2$s)"
 
 #: includes/charts/groups.php includes/charts/genmapper-update-map.js
-msgid "from #%1$s (%2$s, p. %3$s)"
-msgstr "üst grup: #%1$s (%2$s, s. %3$s)"
+msgid "from %1$s (%2$s, p. %3$s)"
+msgstr "üst grup: %1$s (%2$s, s. %3$s)"
 
 #: includes/charts/groups.php includes/charts/genmapper-update-map.js
 msgid "more child groups: p. %s"

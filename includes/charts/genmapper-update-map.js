@@ -6,8 +6,8 @@
  * to circle or cross out, and lines for leader/coach, location, start date and notes.
  *
  * Eggs keep a fixed, writable size, so large trees are split across pages. Pages are cut
- * between eggs (never through one); links that cross a page show "from #id (p. N)" on
- * the child and "more child groups: p. N" on the parent.
+ * between eggs (never through one); links that cross a page show "from <parent name> (p. N)"
+ * on the child and "more child groups: p. N" on the parent.
  *
  * The person printing chooses the smallest text size. Every font is at least that size,
  * and eggs and the page header grow to fit, so larger text means fewer groups per page.
@@ -74,7 +74,6 @@
       text: atLeast(9),
       small: atLeast(8),
       top: atLeast(8.5),
-      id: atLeast(11),
       name: atLeast(11),
       header: atLeast(10),
       title: atLeast(11),
@@ -88,7 +87,7 @@
     z.scale = z.text / 9;
     z.lineH = Math.ceil(Math.max(15, z.text * 1.5));
     z.leaderLineH = Math.ceil(z.leader * 1.22);
-    z.topH = Math.ceil(Math.max(18, Math.max(z.id, z.top) * 1.35));
+    z.topH = Math.ceil(Math.max(18, z.top * 1.35));
     z.countHeadH = Math.ceil(Math.max(18, z.countNum * 1.6));
     z.countsH = z.countHeadH + 26;
     z.countW = Math.max(50, Math.ceil(z.countNum * 4.6));
@@ -486,16 +485,16 @@
       if (parentLocation !== String(d.location || '').trim()) {
         fromParent = format(
           labels.strings.from_parent_location,
-          parent.data.id,
+          parent.data.name,
           parentLocation || labels.strings.no_location,
           parent.page,
         );
       } else if (parent.page === node.page) {
-        fromParent = format(labels.strings.from_parent_here, parent.data.id);
+        fromParent = format(labels.strings.from_parent_here, parent.data.name);
       } else {
         fromParent = format(
           labels.strings.from_parent,
-          parent.data.id,
+          parent.data.name,
           parent.page,
         );
       }
@@ -544,7 +543,6 @@
         <foreignObject x="0" y="0" width="${z.cellW}" height="${z.topH}">
           <div xmlns="http://www.w3.org/1999/xhtml" class="um-top">
             <span class="um-from">${esc(fromParent)}</span>
-            <span class="um-id">#${esc(d.id)}</span>
           </div>
         </foreignObject>
         <foreignObject x="0" y="${z.topH}" width="${z.cellW}" height="${z.countsH}">
@@ -622,9 +620,8 @@
           ${headerCss(z)}
           .um-header-box { overflow: hidden; }
           svg { display: block; overflow: hidden; }
-          .um-top { display: flex; justify-content: space-between; align-items: baseline; height: ${z.topH}px; font-size: ${z.top}px; color: #444; white-space: nowrap; }
+          .um-top { display: flex; align-items: baseline; height: ${z.topH}px; font-size: ${z.top}px; color: #444; white-space: nowrap; }
           .um-from { overflow: hidden; text-overflow: ellipsis; }
-          .um-id { font-weight: bold; font-size: ${z.id}px; color: #111; }
           .um-counts { display: flex; justify-content: center; gap: 8px; }
           .um-count { width: ${z.countW}px; }
           .um-count-head { display: flex; align-items: center; justify-content: center; gap: 3px; height: ${z.countHeadH}px; font-size: ${z.countNum}px; }
