@@ -1748,3 +1748,110 @@ msgstr ""
 msgid "Completed"
 msgstr ""
 
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "Update map"
+msgstr "Güncelleme haritası"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "All groups"
+msgstr "Tüm gruplar"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "Page %1$s of %2$s"
+msgstr "Sayfa %1$s / %2$s"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "Printed %s"
+msgstr "Yazdırma tarihi: %s"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "Updated by"
+msgstr "Güncelleyen"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "Date"
+msgstr "Tarih"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "Write new numbers in the boxes."
+msgstr "Yeni sayıları kutulara yazın."
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "Write changes on the lines."
+msgstr "Değişiklikleri çizgilerin üzerine yazın."
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "Circle practices the group has started; cross out ones it has stopped."
+msgstr "Grubun başladığı uygulamaları daire içine alın; bıraktıklarının üzerini çizin."
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "from #%s"
+msgstr "üst grup: #%s"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "from #%1$s (p. %2$s)"
+msgstr "üst grup: #%1$s (s. %2$s)"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "from #%1$s (%2$s, p. %3$s)"
+msgstr "üst grup: #%1$s (%2$s, s. %3$s)"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "more child groups: p. %s"
+msgstr "diğer alt gruplar: s. %s"
+
+#: includes/charts/groups.php includes/charts/genmapper-update-map.js
+msgid "No location"
+msgstr "Konum yok"
+
+#: includes/charts/groups.php
+msgid "Print update map"
+msgstr "Güncelleme haritasını yazdır"
+
+#: includes/charts/groups.php
+msgid "Prints the groups shown in the tree with space around each one to write updated values."
+msgstr "Ağaçta gösterilen grupları, her birinin çevresinde güncel değerleri yazmak için boşluk bırakarak yazdırır."
+
+#: includes/charts/groups.php
+msgid "Language"
+msgstr "Dil"
+
+#: includes/charts/groups.php
+msgid "Paper"
+msgstr "Kâğıt"
+
+#: includes/charts/groups.php
+msgid "Landscape"
+msgstr "Yatay"
+
+#: includes/charts/groups.php
+msgid "Portrait"
+msgstr "Dikey"
+
+#: includes/charts/groups.php
+msgid "Smallest text size (pt)"
+msgstr "En küçük yazı boyutu (pt)"
+
+#: includes/charts/groups.php
+msgid "All text prints at least this size. Larger text fits fewer groups on each page."
+msgstr "Tüm yazılar en az bu boyutta basılır. Yazı büyüdükçe her sayfaya daha az grup sığar."
+
+#: includes/charts/groups.php
+msgid "Print"
+msgstr "Yazdır"
+
+#: includes/charts/groups.php
+msgid "Could not prepare the update map. Please try again."
+msgstr "Güncelleme haritası hazırlanamadı. Lütfen tekrar deneyin."
+
+#: includes/functions.php
+msgid "Believer Count"
+msgstr "İmanlı Sayısı"
+
+#: includes/functions.php
+msgid "Baptized Count"
+msgstr "Vaftiz Edilmiş Sayısı"
+
+#: includes/functions.php
+msgid "Baptized in Group Count"
+msgstr "Grupta Vaftiz Edilen Sayısı"
